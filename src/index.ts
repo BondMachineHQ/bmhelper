@@ -24,8 +24,8 @@ async function main() {
     }
 
     // clone bm resources repository
-    execSync("git clone git@github.com:Bianco95/bm-resources.git");
-    execSync("mv bm-resources .bm-resources")
+    execSync("git clone https://github.com/BondMachineHQ/bmresources.git");
+    execSync("mv bmresources .bm-resources")
 
     switch(action) {
         case "create":
