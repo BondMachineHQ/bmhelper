@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import { fstat, mkdirSync, writeFileSync, existsSync } from "fs";
 import { debugLog } from "../../functions/generics";
+import fs from "fs";
 
 export class NeuralNetworkHandler {
 
@@ -83,18 +84,33 @@ include simbatch.mk`
         }
     }
 
+    private copyTclFiles(directoryName) {
+        const filesInDir = fs.readdirSync('.bm-resources/');
+        for(const f of filesInDir) {
+            if (f.includes("zedboard_template")) {
+                debugLog(` Going to copy ${f} `, "warning")
+                execSync(`cp .bm-resources/${f} ${directoryName}/`)
+                debugLog(` Copied Makefile ${f}`, "success")
+            }
+        }
+    }
+
     public initializeProject() {
         // create project directory 
         const directoryName: string = "proj_"+this.board+"_"+"neural";
 
         this.checkDependencies(directoryName);
 
-
         debugLog(" Going to create project directory: " + directoryName, "warning")
         mkdirSync(directoryName)
         debugLog(" Successfully create project directory: " + directoryName, "success")
 
+        this.copyTclFiles(directoryName);
         
+        debugLog(" Going to copy bmapi.mk ", "warning")
+        execSync(`cp .bm-resources/bmapi.mk ${directoryName}/`)
+        debugLog(" Copied bmapi.mk ", "success")
+
         debugLog(" Going to copy makefile ", "warning")
         execSync(`cp .bm-resources/Makefile ${directoryName}/`)
         debugLog(" Copied Makefile ", "success")
@@ -127,6 +143,10 @@ include simbatch.mk`
         debugLog(" Going to copy neuralbondconfig.json ", "warning")
         execSync(`cp .bm-resources/neural_network/neuralbondconfig.json ${directoryName}/`)
         debugLog(" Successfully copied neuralbondconfig.json", "success")
+
+        debugLog(" Going to copy vivadoAXIcomment.sh ", "warning")
+        execSync(`cp .bm-resources/vivadoAXIcomment.sh ${directoryName}/`)
+        debugLog(" Successfully copied vivadoAXIcomment.sh", "success")
 
         debugLog(" Going to copy buildroot dependencies", "warning")
         execSync(`cp -r .bm-resources/buildroot.mk ${directoryName}/`)
