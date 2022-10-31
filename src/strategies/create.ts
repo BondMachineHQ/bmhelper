@@ -21,7 +21,7 @@ export class CreateStrategy implements  IStrategy{
         this.necessaryParams = ["project_name", "board", "project_type"];
         this.necessaryParamsForProject = [{
             projectType: "neural_network",
-            requiredInputs: ['n_inputs', 'n_outputs']
+            requiredInputs: ['n_inputs', 'n_outputs', 'source_neuralbond']
         }];
         //this.necessaryParams = [...this.necessaryParams, ...this.necessaryParamsForProject.map(elm => elm.requiredInputs).flat()] as string[]
     }

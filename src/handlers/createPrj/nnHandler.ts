@@ -6,6 +6,7 @@ export class NeuralNetworkHandler {
 
     private n_inputs: number;
     private n_outputs: number;
+    private source_neuralbond: string;
     private necessaryParamsForProject: { projectType: string; requiredInputs: string[]}[];
 
     constructor(protected projectName: string, protected board: string, protected params: string[]) {
@@ -14,8 +15,32 @@ export class NeuralNetworkHandler {
         this.params = params;
         this.necessaryParamsForProject = [{
             projectType: "neural_network",
-            requiredInputs: ['n_inputs', 'n_outputs']
+            requiredInputs: ['n_inputs', 'n_outputs', 'source_neuralbond']
         }];
+    }
+
+    modifyLocalFile(directoryName: string): void {
+        const toSaveLocalMk = `WORKING_DIR=working_dir
+CURRENT_DIR=$(shell pwd)
+SOURCE_NEURALBOND=${this.source_neuralbond}
+NEURALBOND_LIBRARY=neurons
+NEURALBOND_ARGS=-config-file neuralbondconfig.json -operating-mode fragment
+BMINFO=bminfo.json
+BOARD=${this.board}
+MAPFILE=${this.board}_maps.json
+SHOWARGS=-dot-detail 5
+SHOWRENDERER=dot
+VERILOG_OPTIONS=-comment-verilog
+DBASM_ARGS=-d
+#BENCHCORE=i0,p22o0
+#HDL_REGRESSION=bondmachine.sv
+#BM_REGRESSION=bondmachine.json
+include bmapi.mk
+include crosscompile.mk
+include buildroot.mk
+include simbatch.mk`
+
+        writeFileSync(`${directoryName}/local.mk`, toSaveLocalMk);
     }
 
     checkAndExtractProjectRequirements(): void {
@@ -33,6 +58,9 @@ export class NeuralNetworkHandler {
                 case "n_outputs":
                     this.n_outputs = parseInt(this.params[i+1])
                     break;
+                case "source_neuralbond":
+                    this.source_neuralbond = this.params[i+1]
+                    break
             }
         }
     }
@@ -76,19 +104,34 @@ export class NeuralNetworkHandler {
         execSync(`cp .bm-resources/${this.board}.xdc ${directoryName}/`)
         debugLog(" Successfully copied board files", "success")
 
+        debugLog(" Going to copy simbatch.mk ", "warning")
+        execSync(`cp .bm-resources/simbatch.mk ${directoryName}/`)
+        debugLog(" Successfully copied simbatch.mk", "success")
+
+        debugLog(" Going to copy simbatch.py ", "warning")
+        execSync(`cp .bm-resources/simbatch.py ${directoryName}/`)
+        debugLog(" Successfully copied simbatch.py", "success")
+
+        debugLog(" Going to copy bminfo.json ", "warning")
+        execSync(`cp .bm-resources/bminfo.json ${directoryName}/`)
+        debugLog(" Successfully copied bminfo.json", "success")
+
         debugLog(" Going to copy neurons folder", "warning")
         execSync(`cp -r .bm-resources/neural_network/neurons ${directoryName}/`)
         debugLog(" Successfully copied neurons folder", "success")
 
-        debugLog(" Going to copy local.mk ", "warning")
-        execSync(`cp .bm-resources/neural_network/local.mk ${directoryName}/`)
-        debugLog(" Successfully copied neurons folder", "success")
+        // debugLog(" Going to copy local.mk ", "warning")
+        // execSync(`cp .bm-resources/neural_network/local.mk ${directoryName}/`)
+        // debugLog(" Successfully copied local.mk", "success")
+
+        debugLog(" Going to copy neuralbondconfig.json ", "warning")
+        execSync(`cp .bm-resources/neural_network/neuralbondconfig.json ${directoryName}/`)
+        debugLog(" Successfully copied neuralbondconfig.json", "success")
 
         debugLog(" Going to copy buildroot dependencies", "warning")
         execSync(`cp -r .bm-resources/buildroot.mk ${directoryName}/`)
         execSync(`cp -r .bm-resources/crosscompile.mk ${directoryName}/`)
         debugLog(" Successfully copied buildroot dependencies", "success")
-
 
         debugLog( " Going to create bmapi.json", "warning");
         
@@ -136,6 +179,8 @@ export class NeuralNetworkHandler {
         }
     
         writeFileSync(`${directoryName}/bmapi.json`, JSON.stringify(bmApi));
+        this.modifyLocalFile(directoryName);
+
         debugLog(" Successfully create bmapi.json", "success");
     }
 }
