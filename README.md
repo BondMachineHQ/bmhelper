@@ -8,7 +8,8 @@ npm run compile && npm run build
 
 ### How to use
 
-*Project type supported*:
+*Supported Project types*:
+
 1. neural network
 
 
@@ -57,7 +58,7 @@ npm run compile && npm run build
 
 ## The BondMachine Makefile user guide
 
-The following instructions are executable after creating a project. <br />
+After creating a project, you can use the **make** command to manage the project.<br />
 In every project there is a **Makefile** which defines a series of tasks that can be performed. With this special file you are able to manage the project.
 There are two parallel workflows that you can follow in order to generate the firmware but both of them have some steps in common. The common steps are:
 
@@ -140,11 +141,12 @@ Create the custom buildroot linux sdcard-image.
 
 ## Makefile variables
 
-Inside a project there are various **.mk** files which contains some variables necessary (and not) to build a project.
-The following is the list of **.mk** files inside a project:
+Inside a project there is a local.mk file which contains all the variables necessary to create a project. It is searched directly from the Makefile file. Eventually variables can be set in other **.mk** files and included in the local.mk file for convenience.
 
-1. *deploy.mk*
-2. *local.mk*
+The following is the list of commonly used **.mk** files inside a project (but you can also create your own):
+
+1. **local.mk**
+2. *deploy.mk*
 3. *bmapi.mk*
 4. *buildroot.mk*
 5. *crosscompile.mk*
