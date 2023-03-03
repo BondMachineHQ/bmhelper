@@ -2,3 +2,5 @@ dist/
 node_modules/
 pkg_output/
 proj_ebaz4205_neural/
+proj_*
+banknote.json

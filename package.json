@@ -27,7 +27,7 @@
         "yargs": "^17.1.1-candidate.0"
     },
     "devDependencies": {
-        "@types/node": "^16.10.3",
+        "@types/node": "^16.18.13",
         "pkg": "^5.3.3",
         "typescript": "^3.8.3"
     },
