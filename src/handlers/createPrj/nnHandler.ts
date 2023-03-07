@@ -3,11 +3,14 @@ import { fstat, mkdirSync, writeFileSync, existsSync } from "fs";
 import { debugLog } from "../../functions/generics";
 import fs from "fs";
 
+export type flavor = "aximm" | "axist";
+
 export class NeuralNetworkHandler {
 
     private n_inputs: number;
     private n_outputs: number;
     private source_neuralbond: string;
+    private flavor: flavor;
     private necessaryParamsForProject: { projectType: string; requiredInputs: string[]}[];
 
     constructor(protected projectName: string, protected board: string, protected params: string[]) {
@@ -16,7 +19,7 @@ export class NeuralNetworkHandler {
         this.params = params;
         this.necessaryParamsForProject = [{
             projectType: "neural_network",
-            requiredInputs: ['n_inputs', 'n_outputs', 'source_neuralbond']
+            requiredInputs: ['n_inputs', 'n_outputs', 'source_neuralbond', 'flavor']
         }];
     }
 
@@ -62,6 +65,9 @@ include simbatch.mk`
                 case "source_neuralbond":
                     this.source_neuralbond = this.params[i+1]
                     break
+                case "flavor":
+                    this.flavor = this.params[i+1] as flavor;
+                    break
             }
         }
     }
@@ -95,10 +101,25 @@ include simbatch.mk`
         }
     }
 
+    private changeFlavor(directoryName) {
+        const fileData = fs.readFileSync(`${directoryName}/bmapi.mk`, 'utf-8');
+        const rows = fileData.split('\n');
+        const rowIndex = rows.findIndex((row) => row.includes("BMAPI_FLAVOR"));
+        const oldValue = rows[rowIndex];
+
+        if (rowIndex !== -1) {
+            rows[rowIndex] = rows[rowIndex].replace(oldValue, `BMAPI_FLAVOR=${this.flavor}`);
+        
+            const newData = rows.join('\n');
+            console.log("before writing file")
+            fs.writeFileSync(`${directoryName}/bmapi.mk`, newData, 'utf-8');
+        }
+    }
+
     public initializeProject() {
         // create project directory 
-        const directoryName: string = "proj_"+this.board+"_"+"neural";
-
+        //const directoryName: string = "proj_"+this.board+"_"+"neural";
+        const directoryName: string = this.projectName;
         this.checkDependencies(directoryName);
 
         debugLog(" Going to create project directory: " + directoryName, "warning")
@@ -109,6 +130,9 @@ include simbatch.mk`
         
         debugLog(" Going to copy bmapi.mk ", "warning")
         execSync(`cp .bm-resources/bmapi.mk ${directoryName}/`)
+        if (this.flavor != undefined) {
+            this.changeFlavor(directoryName);
+        }
         debugLog(" Copied bmapi.mk ", "success")
 
         debugLog(" Going to copy makefile ", "warning")

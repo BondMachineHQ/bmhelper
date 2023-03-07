@@ -2,7 +2,6 @@ import { execSync } from "child_process";
 import { debugLog, productionLog } from "./functions/generics";
 import { CreateStrategy } from "./strategies/create";
 
-
 export type actionT = "create" // "delete", "update" ...
 
 function buildErrorAndReturn(error: string) {
@@ -24,7 +23,7 @@ async function main() {
     }
 
     // clone bm resources repository
-    execSync("git clone https://github.com/BondMachineHQ/bmresources.git");
+    execSync("git clone -q https://github.com/BondMachineHQ/bmresources.git");
     execSync("mv bmresources .bm-resources")
 
     switch(action) {
@@ -49,6 +48,8 @@ async function main() {
     execSync("rm -rf .bm-resources")
 
     debugLog(" Project has been successfully created", "success");
+    process.exit(0);
+    
 }
 
 main();
