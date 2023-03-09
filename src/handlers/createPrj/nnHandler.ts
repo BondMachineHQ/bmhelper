@@ -3,14 +3,13 @@ import { fstat, mkdirSync, writeFileSync, existsSync } from "fs";
 import { debugLog } from "../../functions/generics";
 import fs from "fs";
 
-export type flavor = "aximm" | "axist";
 
 export class NeuralNetworkHandler {
 
     private n_inputs: number;
     private n_outputs: number;
     private source_neuralbond: string;
-    private flavor: flavor;
+    private flavor: string;
     private necessaryParamsForProject: { projectType: string; requiredInputs: string[]}[];
 
     constructor(protected projectName: string, protected board: string, protected params: string[]) {
@@ -69,7 +68,7 @@ include simbatch.mk`
                     this.source_neuralbond = this.params[i+1]
                     break
                 case "flavor":
-                    this.flavor = this.params[i+1] as flavor;
+                    this.flavor = this.params[i+1] as string;
                     break
             }
         }
@@ -106,8 +105,8 @@ include simbatch.mk`
 
     private modifyBmApi(directoryName: string) {
 
-        const ioMode = this.flavor == "aximm" ? "async" : "sync"
-        const toSaveBmApi = ioMode == "async" ? `USE_BMAPI=yes
+        const ioMode = this.flavor == "aximm" ? "aximm" : "axist"
+        const toSaveBmApi = ioMode == "aximm" ? `USE_BMAPI=yes
 BMAPI_LANGUAGE=go
 BMAPI_FLAVOR=${ioMode}
 BMAPI_MAPFILE=bmapi.json
