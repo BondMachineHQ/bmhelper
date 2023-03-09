@@ -96,7 +96,7 @@ include simbatch.mk`
     private copyTclFiles(directoryName) {
         const filesInDir = fs.readdirSync('.bm-resources/');
         for(const f of filesInDir) {
-            if (f.includes("zedboard_template")) {
+            if (f.includes("zedboard_")) {
                 debugLog(` Going to copy ${f} `, "warning")
                 execSync(`cp .bm-resources/${f} ${directoryName}/`)
                 debugLog(` Copied Makefile ${f}`, "success")
