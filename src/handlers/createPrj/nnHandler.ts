@@ -24,11 +24,14 @@ export class NeuralNetworkHandler {
     }
 
     modifyLocalFile(directoryName: string): void {
+
+        const ioMode = this.flavor == "aximm" ? "async" : "sync"
+
         const toSaveLocalMk = `WORKING_DIR=working_dir
 CURRENT_DIR=$(shell pwd)
 SOURCE_NEURALBOND=${this.source_neuralbond}
 NEURALBOND_LIBRARY=neurons
-NEURALBOND_ARGS=-config-file neuralbondconfig.json -operating-mode fragment
+NEURALBOND_ARGS=-config-file neuralbondconfig.json -operating-mode fragment -io-mode ${ioMode}
 BMINFO=bminfo.json
 BOARD=${this.board}
 MAPFILE=${this.board}_maps.json
@@ -101,7 +104,30 @@ include simbatch.mk`
         }
     }
 
-    private changeFlavor(directoryName) {
+    private modifyBmApi(directoryName: string) {
+
+        const ioMode = this.flavor == "aximm" ? "async" : "sync"
+        const toSaveBmApi = ioMode == "async" ? `USE_BMAPI=yes
+BMAPI_LANGUAGE=go
+BMAPI_FLAVOR=${ioMode}
+BMAPI_MAPFILE=bmapi.json
+BMAPI_LIBOUTDIR=working_dir/bmapi
+BMAPI_MODOUTDIR=working_dir/module
+BMAPI_AUXOUTDIR=working_dir/aux
+BMAPI_GOAPP=sumapp.go
+BMAPI_GOMOD=git.fisica.unipg.it/sumapp.git
+        ` :`USE_BMAPI=yes
+BMAPI_LANGUAGE=python
+BMAPI_FLAVOR=${ioMode}
+BMAPI_FLAVOR_VERSION=basic
+BMAPI_MAPFILE=bmapi.json
+BMAPI_LIBOUTDIR=working_dir/bmapi
+BMAPI_FRAMEWORK=pynq
+`
+    writeFileSync(`${directoryName}/bmapi.mk`, toSaveBmApi);
+    }
+
+    private changeFlavor(directoryName: string) {
         const fileData = fs.readFileSync(`${directoryName}/bmapi.mk`, 'utf-8');
         const rows = fileData.split('\n');
         const rowIndex = rows.findIndex((row) => row.includes("BMAPI_FLAVOR"));
@@ -129,10 +155,11 @@ include simbatch.mk`
         this.copyTclFiles(directoryName);
         
         debugLog(" Going to copy bmapi.mk ", "warning")
-        execSync(`cp .bm-resources/bmapi.mk ${directoryName}/`)
-        if (this.flavor != undefined) {
-            this.changeFlavor(directoryName);
-        }
+        // execSync(`cp .bm-resources/bmapi.mk ${directoryName}/`)
+        // if (this.flavor != undefined) {
+        //     this.changeFlavor(directoryName);
+        // }
+        this.modifyBmApi(directoryName);
         debugLog(" Copied bmapi.mk ", "success")
 
         debugLog(" Going to copy makefile ", "warning")
