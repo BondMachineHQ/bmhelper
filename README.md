@@ -63,7 +63,7 @@ In every project there is a **Makefile** which defines a series of tasks that ca
 There are two parallel workflows that you can follow in order to generate the firmware but both of them have some steps in common. The common steps are:
 
 ```
-make bondmachine <br />
+make bondmachine
 
 Create the Bondmachine and all its connecting processors.
 You can view a diagram of the Bondmachine just created with the following instructions:
