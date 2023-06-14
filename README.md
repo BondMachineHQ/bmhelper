@@ -68,6 +68,7 @@ make bondmachine
 Create the Bondmachine and all its connecting processors.
 You can view a diagram of the Bondmachine just created with the following instructions:
 ```
+{: class="notranslate"}
 
 ```
 make show
