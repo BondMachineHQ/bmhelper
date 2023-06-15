@@ -1,0 +1,13 @@
+
+$ git clone https://github.com/BondMachineHQ/BondMachine
+$ cd BondMachine
+$ cd cmd
+$ make
+
+$ git clone conproc@git.fisica.unipg.it:/git/conproc
+$ cd conproc
+$ git checkout master
+$ git submodule init
+$ git submodule update
+
+
