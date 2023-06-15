@@ -98,7 +98,6 @@ include simbatch.mk`
             if (f.includes("zedboard_")) {
                 debugLog(` Going to copy ${f} `, "warning")
                 execSync(`cp .bm-resources/${f} ${directoryName}/`)
-                execSync(`cp .bm-resources/${f} ./`)
                 debugLog(` Copied Makefile ${f}`, "success")
             }
         }
