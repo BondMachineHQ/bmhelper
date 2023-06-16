@@ -1,85 +1,88 @@
 import { execSync } from "child_process";
-import fs, { mkdirSync } from "fs";
+import fs, { existsSync, mkdirSync } from "fs";
 import { debugLog } from "../functions/generics";
-import { NeuralNetworkHandler } from "../handlers/createPrj/nnHandler";
+import { IStrategy } from "../interfaces/IStrategy";
 
-export interface IStrategy {
-    checkParams(): void;
-    execute(): void;
-}
-
-export class CreateStrategy implements  IStrategy{
+export class CreateStrategy {
 
     private necessaryParams: string[];
     private projectName: string;
-    private projectType: string;
-    private board: string;
-    private necessaryParamsForProject: { projectType: string; requiredInputs: string[]}[];
+    private filesToCopy: string[];
+    private executablesNecessaryBefore: string[];
+    private executablesNecessaryAfter: string[];
 
     constructor(protected params: string[]) {
         this.params = params;
-        this.necessaryParams = ["project_name", "board", "project_type"];
-        this.necessaryParamsForProject = [{
-            projectType: "neural_network",
-            requiredInputs: ['n_inputs', 'n_outputs', 'source_neuralbond']
-        }];
-        //this.necessaryParams = [...this.necessaryParams, ...this.necessaryParamsForProject.map(elm => elm.requiredInputs).flat()] as string[]
+        this.necessaryParams = ["project_name"];
+        this.filesToCopy = ["Makefile", "Kconfig"];
+        this.executablesNecessaryBefore = ["make"]
     }
-    
 
-    checkParams(): void {
-        // validate project name, project type and board
+    public getProjectName(): string {
+        return this.projectName;
+    }
 
-        const necessaryParamsLength = this.necessaryParams.length;
+    check(): void {
+
+        // check executable
+
+        // WIP: to do check of executable
+        for (const executable of this.executablesNecessaryBefore) {
+            try {
+                execSync(executable)
+            } catch (err) {
+                if (err.message.includes("not found")) {
+                    throw new Error("Menu config command not found")
+                }
+            }
+        }
         
+        const necessaryParamsLength = this.necessaryParams.length;
+
         let paramCounter = 0;
-        for(let i = 0; i < this.params.length; i++) {
-            
+        for (let i = 0; i < this.params.length; i++) {
+
             if (this.params[i].startsWith("--") == false) {
                 continue;
             }
 
             const param = this.params[i].slice(2, this.params[i].length);
-            // if (this.necessaryParams.includes(param) == false) {
-            //     throw new Error(" Param "+param+" is not handled by create strategy.")
-            // }
-            switch(param) {
+
+            switch (param) {
                 case "project_name":
-                    this.projectName = this.params[i+1];
-                    break;
-                case "board":
-                    this.board = this.params[i+1];
-                    break;
-                case "project_type":
-                    this.projectType = this.params[i+1];
+                    this.projectName = this.params[i + 1];
                     break;
             }
             paramCounter = paramCounter + 1;
-            
+
         }
 
         if (paramCounter < necessaryParamsLength) {
-            throw new Error(" Not all parameters has been specified; necessary parameters are: "+this.necessaryParams.join(","))
+            throw new Error(" Not all parameters has been specified; necessary parameters are: " + this.necessaryParams.join(","))
+        }
+
+        for (const fileToCopy of this.filesToCopy) {
+            debugLog(` Going to check if ${fileToCopy} exists in bmresource `, `warning`)
+            if (!existsSync(`.bm-resources/${fileToCopy}`)) {
+                throw new Error(`File ${fileToCopy} does not exist in .bmresources directory`)
+            }
+            debugLog(` Copied ${fileToCopy} `, `success`)
         }
 
         debugLog(" Request to create project. Specifics: ", "success");
         debugLog(" Project name is:  " + this.projectName, "success");
-        debugLog(" Project board is: " + this.board, "success");
-        debugLog(" Project type is:  " + this.projectType, "success");
     }
 
     public execute(): void {
-    
-        switch(this.projectType) {
-            case "neural_network":
-                const nnHandler = new NeuralNetworkHandler(this.projectName, this.board, this.params);
-                nnHandler.checkAndExtractProjectRequirements();
-                nnHandler.initializeProject();
-                break;
-            default:
-                throw new Error(" Project type not yet handled by Bondmachine helper tool");
+
+        debugLog(" Going to create project directory: " + this.projectName, "warning")
+        mkdirSync(this.projectName)
+        debugLog(" Successfully create project directory: " + this.projectName, "success")
+
+        for (const fileToCopy of this.filesToCopy) {
+            debugLog(` Going to copy ${fileToCopy} `, `warning`)
+            execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
+            debugLog(` Copied ${fileToCopy} `, `success`)
         }
-
     }
-
 }
