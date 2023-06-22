@@ -172,14 +172,18 @@ export class ProjectsHandler implements IWorkflowHandler {
                     const filePath = `${this.workingDir}/${directoryClonedName}/${file}`;
                     const data = fs.readFileSync(filePath, 'utf8');
                     let modifiedData = data;
-                    const regex = new RegExp("{{"+key+"}}", 'g');
+                    const regex = new RegExp("{{" + key + "}}", 'g');
                     modifiedData = modifiedData.replace(regex, value);
                     fs.writeFileSync(filePath, modifiedData, 'utf8');
                 }
 
-                generateMkFile.push("TEMPLATE_"+key.toUpperCase()+"="+value);
+                if (key == "name") {
+                    generateMkFile.push("TEMPLATE_INSTANCE" + key.toUpperCase() + "=" + value);
+                } else {
+                    generateMkFile.push("TEMPLATE_" + key.toUpperCase() + "=" + value);
+                }
             }
-            
+
             const generatedMkFileToDump = generateMkFile.join("\n");
             fs.writeFileSync(`${this.workingDir}/${directoryClonedName}/generated.mk`, generatedMkFileToDump, 'utf8');
         }
