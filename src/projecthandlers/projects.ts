@@ -14,6 +14,7 @@ export interface ITemplateData {
     ranges: string[];
     registersize: string[];
     multop: string[];
+    name?: string[];
 }
 
 export class ProjectsHandler implements IWorkflowHandler {
@@ -82,9 +83,7 @@ export class ProjectsHandler implements IWorkflowHandler {
         const jsonData: ITemplateType = JSON.parse(fileData);
         for (const key of Object.keys(jsonData)) {
             const infoToAdd = jsonData[key];
-            if (key == "name") {
-                infoToAdd["name"] = [jsonData[key]];
-            } else {
+            if (!("name" in infoToAdd)) {
                 infoToAdd["name"] = [key];
             }
             this.templatesData.push(infoToAdd)
