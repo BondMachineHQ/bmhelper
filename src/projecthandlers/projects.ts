@@ -31,7 +31,7 @@ export class ProjectsHandler implements IWorkflowHandler {
         this.dependencies = ["PROJECTS_TEMPLATEDIR", "PROJECTS_TEMPLATEDESC", "WORKING_DIR"]
         this.variables = variables;
         this.templatesData = [];
-        this.patternsToCheck = ['{{datatype}}', '{{ranges}}', '{{prefix}}', '{{registersize}}'];
+        this.patternsToCheck = ['{{datatype}}', '{{ranges}}', '{{prefix}}', '{{registersize}}', '{{multop}}'];
         this.workingDir = "";
         this.jsonToRead = "";
         this.templateDir = "";
@@ -106,6 +106,9 @@ export class ProjectsHandler implements IWorkflowHandler {
                 if (this.patternsToCheck[i].includes("registersize")) {
                     modifiedData = modifiedData.replace(regex, templateData["registersize"][0]);
                 } 
+                if (this.patternsToCheck[i].includes("multop")) {
+                    modifiedData = modifiedData.replace(regex, templateData["multop"][0]);
+                }
             }
 
             fs.writeFileSync(filePath, modifiedData, 'utf8')
@@ -132,9 +135,9 @@ export class ProjectsHandler implements IWorkflowHandler {
 
         for(const templateData of this.templatesData) {
             for(const range of templateData.ranges) {
-                const generatedUuid = uuid();
-                const directoryClonedName: string = `template_${generatedUuid}`;
-                this.generatedProjects.push(directoryClonedName)
+                const generatedUuid:string = uuid();
+                const directoryClonedName: string = `template_${generatedUuid.replace(/-/g, "_")}`;
+                this.generatedProjects.push(this.workingDir+"/"+directoryClonedName)
                 execSync(`cp -r ${this.templateDir} ${this.workingDir}/${directoryClonedName}`);
                 this.modifyFileInDirectoryCloned(directoryClonedName, templateData, range)
             }
