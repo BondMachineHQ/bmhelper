@@ -13,6 +13,7 @@ export interface ITemplateData {
     prefix: string[];
     ranges: string[];
     registersize: string[];
+    multop: string[];
 }
 
 export class ProjectsHandler implements IWorkflowHandler {
@@ -42,16 +43,16 @@ export class ProjectsHandler implements IWorkflowHandler {
 
     public execValidation() {
 
-        for(const dep of this.dependencies) {
+        for (const dep of this.dependencies) {
             let found: boolean = false;
-            for(const variable of this.variables) {
+            for (const variable of this.variables) {
                 if (dep == variable.name) {
                     found = true;
                     continue
                 }
             }
             if (found == false) {
-                throw new Error("Dependency not aligned for variable: "+dep)
+                throw new Error("Dependency not aligned for variable: " + dep)
             }
         }
 
@@ -59,13 +60,13 @@ export class ProjectsHandler implements IWorkflowHandler {
         const jsonToRead = this.variables.find(elm => elm.name === "PROJECTS_TEMPLATEDESC");
 
         if (!fs.existsSync(jsonToRead.value)) {
-            throw new Error("Json file with template specifics not found: "+jsonToRead)
+            throw new Error("Json file with template specifics not found: " + jsonToRead)
         }
 
         this.jsonToRead = jsonToRead.value;
-        
+
         if (!fs.existsSync(jsonToRead.value)) {
-            throw new Error("template dir not found: "+jsonToRead)
+            throw new Error("template dir not found: " + jsonToRead)
         }
 
         this.templateDir = templateDir.value;
@@ -74,13 +75,19 @@ export class ProjectsHandler implements IWorkflowHandler {
     private readTemplateJson() {
 
         if (!fs.existsSync(this.jsonToRead)) {
-            throw new Error("Json file with template specifics not found: "+this.jsonToRead)
+            throw new Error("Json file with template specifics not found: " + this.jsonToRead)
         }
 
         const fileData = fs.readFileSync(this.jsonToRead, 'utf8');
         const jsonData: ITemplateType = JSON.parse(fileData);
-        for(const key of Object.keys(jsonData)) {
-            this.templatesData.push(jsonData[key])
+        for (const key of Object.keys(jsonData)) {
+            const infoToAdd = jsonData[key];
+            if (key == "name") {
+                infoToAdd["name"] = [jsonData[key]];
+            } else {
+                infoToAdd["name"] = [key];
+            }
+            this.templatesData.push(infoToAdd)
         }
     }
 
@@ -90,22 +97,21 @@ export class ProjectsHandler implements IWorkflowHandler {
             const filePath = `${this.workingDir}/${directoryClonedName}/${file}`;
 
             const data = fs.readFileSync(filePath, 'utf8');
-
             let modifiedData = data;
-            for(let i = 0; i < this.patternsToCheck.length; i++) {
+            for (let i = 0; i < this.patternsToCheck.length; i++) {
                 const regex = new RegExp(this.patternsToCheck[i], 'g');
                 if (this.patternsToCheck[i].includes("datatype")) {
                     modifiedData = modifiedData.replace(regex, templateData["datatype"][0]);
-                } 
+                }
                 if (this.patternsToCheck[i].includes("prefix")) {
                     modifiedData = modifiedData.replace(regex, templateData["prefix"][0]);
-                } 
+                }
                 if (this.patternsToCheck[i].includes("range")) {
                     modifiedData = modifiedData.replace(regex, range);
-                } 
+                }
                 if (this.patternsToCheck[i].includes("registersize")) {
                     modifiedData = modifiedData.replace(regex, templateData["registersize"][0]);
-                } 
+                }
                 if (this.patternsToCheck[i].includes("multop")) {
                     modifiedData = modifiedData.replace(regex, templateData["multop"][0]);
                 }
@@ -113,18 +119,71 @@ export class ProjectsHandler implements IWorkflowHandler {
 
             fs.writeFileSync(filePath, modifiedData, 'utf8')
         }
-        
-        const generateMkFile = "TEMPLATE_DATATYPE="+templateData.datatype+"\n"+
-                            "TEMPLATE_PREFIX="+templateData.prefix+"\n"+
-                            "TEMPLATE_RANGE="+range+"\n"+
-                            "TEMPLATE_REGISTERSIZE="+templateData.registersize+"\n"
-        
+
+        const generateMkFile = "TEMPLATE_DATATYPE=" + templateData.datatype + "\n" +
+            "TEMPLATE_PREFIX=" + templateData.prefix + "\n" +
+            "TEMPLATE_RANGE=" + range + "\n" +
+            "TEMPLATE_REGISTERSIZE=" + templateData.registersize + "\n"
+
         fs.writeFileSync(`${this.workingDir}/${directoryClonedName}/generated.mk`, generateMkFile, 'utf8')
     }
 
     private writeGeneratedVariables() {
-        const valueOfGlobalMkFile = "SOURCE_PROJECTS="+this.projectsListName+"\n";
+        const valueOfGlobalMkFile = "SOURCE_PROJECTS=" + this.projectsListName + "\n";
         fs.writeFileSync(`${this.globalGeneratedMkFile}`, valueOfGlobalMkFile, 'utf8')
+    }
+
+
+    // se ci sono tre grandezze differenti => tira errore
+    private createProject(templateInfo: ITemplateData) {
+
+        const valuesSize: number[] = [];
+
+        for (const key in templateInfo) {
+            const value = templateInfo[key];
+            valuesSize.push(value.length);
+        }
+
+        if (Array.from(new Set(valuesSize)).length > 2) {
+            throw new Error("Sizes mismatch")
+        }
+
+        const maxValue = Math.max(...valuesSize);
+
+        for (const key in templateInfo) {
+            const value = templateInfo[key];
+            if (value.length < maxValue) {
+                const diff = maxValue - value.length
+                for (let j = 0; j < diff; j++) {
+                    value.push(value[0])
+                }
+            }
+        }
+
+        for (let i = 0; i < maxValue; i++) {
+            const directoryClonedName: string = `template_${templateInfo["name"][0]}_${i}`;
+            this.generatedProjects.push(this.workingDir + "/" + directoryClonedName);
+            execSync(`cp -r ${this.templateDir} ${this.workingDir}/${directoryClonedName}`);
+            let generateMkFile: string[] = [];
+            for (const key in templateInfo) {
+                const value = templateInfo[key][i];
+                const files = fs.readdirSync(`${this.workingDir}/${directoryClonedName}`);
+
+                for (const file of files) {
+                    const filePath = `${this.workingDir}/${directoryClonedName}/${file}`;
+                    const data = fs.readFileSync(filePath, 'utf8');
+                    let modifiedData = data;
+                    const regex = new RegExp("{{"+key+"}}", 'g');
+                    modifiedData = modifiedData.replace(regex, value);
+                    fs.writeFileSync(filePath, modifiedData, 'utf8');
+                }
+
+                generateMkFile.push("TEMPLATE_"+key.toUpperCase()+"="+value);
+            }
+            
+            const generatedMkFileToDump = generateMkFile.join("\n");
+            fs.writeFileSync(`${this.workingDir}/${directoryClonedName}/generated.mk`, generatedMkFileToDump, 'utf8');
+        }
     }
 
     private duplicateFolder() {
@@ -133,16 +192,10 @@ export class ProjectsHandler implements IWorkflowHandler {
             mkdirSync(`${this.workingDir}`)
         }
 
-        for(const templateData of this.templatesData) {
-            for(const range of templateData.ranges) {
-                const generatedUuid:string = uuid();
-                const directoryClonedName: string = `template_${generatedUuid.replace(/-/g, "_")}`;
-                this.generatedProjects.push(this.workingDir+"/"+directoryClonedName)
-                execSync(`cp -r ${this.templateDir} ${this.workingDir}/${directoryClonedName}`);
-                this.modifyFileInDirectoryCloned(directoryClonedName, templateData, range)
-            }
+        for (const templateData of this.templatesData) {
+            this.createProject(templateData);
         }
-        
+
         const projectsList = this.generatedProjects.join("\n");
         fs.writeFileSync(`${this.projectsListName}`, projectsList, 'utf8')
 
