@@ -30,7 +30,7 @@ export class ProjectsHandler implements IWorkflowHandler {
     private globalGeneratedMkFile: string;
 
     constructor(protected variables: IVariable[]) {
-        this.dependencies = ["PROJECTS_TEMPLATEDIR", "PROJECTS_TEMPLATEDESC", "WORKING_DIR"]
+        this.dependencies = ["MULTI_TEMPLATEDIR", "MULTI_TEMPLATEDESC", "WORKING_DIR"]
         this.variables = variables;
         this.templatesData = [];
         this.patternsToCheck = ['{{datatype}}', '{{ranges}}', '{{prefix}}', '{{registersize}}', '{{multop}}'];
@@ -57,8 +57,8 @@ export class ProjectsHandler implements IWorkflowHandler {
             }
         }
 
-        const templateDir = this.variables.find(elm => elm.name === "PROJECTS_TEMPLATEDIR");
-        const jsonToRead = this.variables.find(elm => elm.name === "PROJECTS_TEMPLATEDESC");
+        const templateDir = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDIR");
+        const jsonToRead = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDESC");
 
         if (!fs.existsSync(jsonToRead.value)) {
             throw new Error("Json file with template specifics not found: " + jsonToRead)
@@ -128,7 +128,7 @@ export class ProjectsHandler implements IWorkflowHandler {
     }
 
     private writeGeneratedVariables() {
-        const valueOfGlobalMkFile = "SOURCE_PROJECTS=" + this.projectsListName + "\n";
+        const valueOfGlobalMkFile = "SOURCE_MULTI=" + this.projectsListName + "\n";
         fs.writeFileSync(`${this.globalGeneratedMkFile}`, valueOfGlobalMkFile, 'utf8')
     }
 

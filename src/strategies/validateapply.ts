@@ -14,7 +14,7 @@ export interface IVariable {
  */
 // workflow => simulazione da template. E' attivo se c'è la variable project_type=templatesim
 // quando fai apply ti ritrovi con n progetti copie di questo risolti i template 
-// generated.mk che includiamo nel makefile (qui ci va la lista dei progetti) PROJECTS_LIST=...
+// generated.mk che includiamo nel makefile (qui ci va la lista dei progetti) MULTI_LIST=...
 // devo verificare che ci sia il progect target
 // dentro a generated.mk template_nometemplate=<valore> template_
 // TEMPLATE=NOME
@@ -38,7 +38,7 @@ export class ValidateApplyStrategy implements IStrategy {
             },
             {
                 name: "simulation",
-                key: "PROJECT_TYPE_PROJECTS",
+                key: "PROJECT_TYPE_MULTI",
                 value: "y"
             }
         ]
@@ -67,7 +67,7 @@ export class ValidateApplyStrategy implements IStrategy {
     public async exec() {
 
         for(const workflow of this.workflowsSelected) {
-            if (workflow.key == "PROJECT_TYPE_PROJECTS" && workflow.value == "y") {
+            if (workflow.key == "PROJECT_TYPE_MULTI" && workflow.value == "y") {
                 const prjHandler = new ProjectsHandler(this.variables);
                 prjHandler.execValidation();
                 if(this.apply === true) {
@@ -77,7 +77,7 @@ export class ValidateApplyStrategy implements IStrategy {
         }
     }
 
-    //  PROJECTS_TARGET (simulate)
+    //  MULTI_TARGET (simulate)
     //  PROJECT_TYPE (templatesim)
 
     insertNewVariable(name: string, value: string) {
