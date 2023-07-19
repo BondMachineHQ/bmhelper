@@ -3,6 +3,9 @@ import { IVariable } from "../strategies/validateapply";
 import { v4 as uuid } from "uuid";
 import fs, { existsSync, mkdirSync } from "fs";
 import { IWorkflowHandler } from "../interfaces/IStrategy";
+import { productionLog } from "../functions/generics";
+import { AbstractHandler } from "./abstracthandler";
+import { IMandatoryDependencies } from "./bondgo";
 
 export interface ITemplateType {
     [key: string]: ITemplateData
@@ -17,9 +20,10 @@ export interface ITemplateData {
     name?: string[];
 }
 
-export class ProjectsHandler implements IWorkflowHandler {
+export class ProjectsHandler extends AbstractHandler {
 
-    private dependencies: string[];
+    protected mandatoryDependencies: IMandatoryDependencies[];
+    protected optionalDependencies: IVariable[];
     private templatesData: ITemplateData[];
     private patternsToCheck: string[];
     private workingDir: string;
@@ -30,7 +34,19 @@ export class ProjectsHandler implements IWorkflowHandler {
     private globalGeneratedMkFile: string;
 
     constructor(protected variables: IVariable[]) {
-        this.dependencies = ["MULTI_TEMPLATEDIR", "MULTI_TEMPLATEDESC", "WORKING_DIR"]
+        super(variables)
+        this.mandatoryDependencies = [{
+            name: "MULTI_TEMPLATEDIR",
+            type: "dir"
+        }, {
+            name: "MULTI_TEMPLATEDESC",
+            type: "dir"
+        }]
+        this.optionalDependencies = [{
+            name: "WORKING_DIR",
+            value: "working_dir",
+            toGenerate: false
+        }]
         this.variables = variables;
         this.templatesData = [];
         this.patternsToCheck = ['{{datatype}}', '{{ranges}}', '{{prefix}}', '{{registersize}}', '{{multop}}'];
@@ -42,23 +58,19 @@ export class ProjectsHandler implements IWorkflowHandler {
         this.globalGeneratedMkFile = "generated.mk"
     }
 
-    public execValidation() {
-
-        for (const dep of this.dependencies) {
-            let found: boolean = false;
-            for (const variable of this.variables) {
-                if (dep == variable.name) {
-                    found = true;
-                    continue
-                }
-            }
-            if (found == false) {
-                throw new Error("Dependency not aligned for variable: " + dep)
-            }
-        }
-
+    checkInternalDependencies(): void {
         const templateDir = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDIR");
         const jsonToRead = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDESC");
+
+        if(!fs.existsSync(templateDir.value)) {
+            productionLog("The template directory specified "+templateDir.value+" does not exist", "error");
+            throw new Error("the template directory selected "+templateDir.value+" does not exist")
+        }
+
+        if(!fs.existsSync(jsonToRead.value)) {
+            productionLog("The json file specified "+jsonToRead.value+" does not exist", "error");
+            throw new Error("the json file specified "+jsonToRead.value+" does not exist")
+        }
 
         if (!fs.existsSync(jsonToRead.value)) {
             throw new Error("Json file with template specifics not found: " + jsonToRead)
@@ -88,43 +100,6 @@ export class ProjectsHandler implements IWorkflowHandler {
             }
             this.templatesData.push(infoToAdd)
         }
-    }
-
-    private modifyFileInDirectoryCloned(directoryClonedName: string, templateData: ITemplateData, range: string) {
-        const files = fs.readdirSync(`${this.workingDir}/${directoryClonedName}`);
-        for (const file of files) {
-            const filePath = `${this.workingDir}/${directoryClonedName}/${file}`;
-
-            const data = fs.readFileSync(filePath, 'utf8');
-            let modifiedData = data;
-            for (let i = 0; i < this.patternsToCheck.length; i++) {
-                const regex = new RegExp(this.patternsToCheck[i], 'g');
-                if (this.patternsToCheck[i].includes("datatype")) {
-                    modifiedData = modifiedData.replace(regex, templateData["datatype"][0]);
-                }
-                if (this.patternsToCheck[i].includes("prefix")) {
-                    modifiedData = modifiedData.replace(regex, templateData["prefix"][0]);
-                }
-                if (this.patternsToCheck[i].includes("range")) {
-                    modifiedData = modifiedData.replace(regex, range);
-                }
-                if (this.patternsToCheck[i].includes("registersize")) {
-                    modifiedData = modifiedData.replace(regex, templateData["registersize"][0]);
-                }
-                if (this.patternsToCheck[i].includes("multop")) {
-                    modifiedData = modifiedData.replace(regex, templateData["multop"][0]);
-                }
-            }
-
-            fs.writeFileSync(filePath, modifiedData, 'utf8')
-        }
-
-        const generateMkFile = "TEMPLATE_DATATYPE=" + templateData.datatype + "\n" +
-            "TEMPLATE_PREFIX=" + templateData.prefix + "\n" +
-            "TEMPLATE_RANGE=" + range + "\n" +
-            "TEMPLATE_REGISTERSIZE=" + templateData.registersize + "\n"
-
-        fs.writeFileSync(`${this.workingDir}/${directoryClonedName}/generated.mk`, generateMkFile, 'utf8')
     }
 
     private writeGeneratedVariables() {
@@ -205,9 +180,40 @@ export class ProjectsHandler implements IWorkflowHandler {
         this.writeGeneratedVariables();
     }
 
-    public apply() {
+    public async execOptionalDependencies() {
+        for(const optDependency of this.optionalDependencies) {
+            let found: boolean = false;
+            for (const variable of this.variables) {
+                if (optDependency.name == variable.name) {
+                    productionLog("Found "+variable.name, "success");
+                    found = true;
+                    continue
+                }
+            }
+            if (found == false) {
+                const reply = (await productionLog(optDependency.name+" not found. Do you want to use the default value: "+optDependency.value+" ?", "ask") as string)
+                if (reply.toLowerCase() == "y" || reply.toLowerCase() == "yes") {
+                    this.variables.push({
+                        name: optDependency.name,
+                        value: optDependency.value,
+                        toGenerate: false
+                    })
+                } else {
+                    this.variables.push({
+                        name: optDependency.name,
+                        value: reply,
+                        toGenerate: false
+                    })
+                }
+            }
+        }
+    }
 
-        this.execValidation();
+    public async apply() {
+
+        await this.execValidation();
+        await this.execOptionalDependencies();
+
         this.workingDir = this.variables.find(elm => elm.name === "WORKING_DIR").value;
 
         this.readTemplateJson();

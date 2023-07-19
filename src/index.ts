@@ -7,12 +7,14 @@ import { ValidateApplyStrategy } from "./strategies/validateapply";
 // 1. create -> create the projects with Makefile and kconfig
 
 export type actionT = "create"  | "validate" | "apply" // "delete", "update" ...
+export let ISDEBUGACTIVE:boolean = false;
+
 
 function buildErrorAndReturn(error: string) {
     const errorToReturn: { error: string } = {
         error: error
     };
-    debugLog(JSON.stringify(errorToReturn), "error");
+    productionLog(JSON.stringify(errorToReturn), "error");
     execSync("rm -rf .bm-resources")
     process.exit(1);
 }
@@ -21,6 +23,7 @@ async function main() {
 
     const paramsPassedByCli: string[] = process.argv.slice(2);
     const action: actionT = paramsPassedByCli[0] as actionT;
+    ISDEBUGACTIVE = paramsPassedByCli.length > 1 && paramsPassedByCli[1] == "debug" ? true : false;
 
     debugLog(` Requested ${action} `, "success");
 
@@ -50,6 +53,7 @@ async function main() {
             const validateStrategy = new ValidateApplyStrategy(false);
             try {
                 await validateStrategy.check();
+                await validateStrategy.exec();
             } catch (err) {
                 buildErrorAndReturn("Params are not correct; " + err.message);
             }
@@ -70,7 +74,7 @@ async function main() {
 
     execSync("rm -rf .bm-resources")
 
-    debugLog(` Project has been successfully ${action}`, "success");
+    productionLog(`Project has been successfully ${action}`, "success")
     process.exit(0);
 
 }

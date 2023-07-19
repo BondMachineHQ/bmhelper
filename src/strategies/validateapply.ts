@@ -1,12 +1,16 @@
 import { IStrategy } from "../interfaces/IStrategy";
 import readline from "readline";
 import fs, { existsSync } from "fs";
-import { debugLog } from "../functions/generics";
+import { debugLog, productionLog } from "../functions/generics";
 import { ProjectsHandler } from "../projecthandlers/projects";
+import { execSync } from "child_process";
+import { BondGoProjectHandler } from "../projecthandlers/bondgo";
 
 export interface IVariable {
     name: string;
     value: string;
+    toGenerate: boolean;
+    content?: string;
 }
 
 /**
@@ -27,6 +31,7 @@ export class ValidateApplyStrategy implements IStrategy {
     private workflows: { name: string; key: string; value: string }[];
     private workflowsSelected: { name: string; key: string; value: string }[];
     private configsFileToRead: string[];
+    private tools: string[];
 
     constructor(protected apply: boolean) {
         this.variables = []
@@ -40,11 +45,49 @@ export class ValidateApplyStrategy implements IStrategy {
                 name: "simulation",
                 key: "PROJECT_TYPE_MULTI",
                 value: "y"
+            },
+            {
+                name: "bondgo",
+                key: "SOURCE_GO",
+                value: ""
             }
         ]
         this.workflowsSelected = [];
         this.configsFileToRead = [".config", "local.mk"]
         this.apply = apply;
+        this.tools = [
+            "basm",
+            "bmanalysis",
+            "bmnumbers",
+            "bmstack",
+            "bondgo",
+            "bondmachine",
+            "melbond",
+            "neuralbond",
+            "procbuilder",
+            "simbox"
+        ]
+    }
+
+    checkTools() {
+
+        const missingTools: string[] = [];
+        for (const tool of this.tools) {
+            try {
+                execSync("which " + tool)
+            } catch (err) {
+                missingTools.push(tool);
+            }
+        }
+
+        if (missingTools.length > 0) {
+            for(const missingTool of missingTools) {
+                productionLog("Tool not found: " + missingTool, "error");
+            }
+            throw new Error("missing tool");
+        }
+
+        productionLog("Tools found", "success");
     }
 
     getWorkflow() {
@@ -58,27 +101,32 @@ export class ValidateApplyStrategy implements IStrategy {
         }
 
         if (this.workflowsSelected.length == 0) {
+            productionLog("No workflows could be identified based on the scanned files.", "error");
             throw new Error("No workflow found")
         }
 
-        debugLog(" Workflows detected: "+this.workflowsSelected.map(elm => elm.name).join(","), "success")
+        productionLog("Workflows detected: " + this.workflowsSelected.map(elm => elm.name).join(","), "success");
+        debugLog("Workflows detected: " + this.workflowsSelected.map(elm => elm.name).join(","), "success")
     }
 
     public async exec() {
 
-        for(const workflow of this.workflowsSelected) {
+        for (const workflow of this.workflowsSelected) {
             if (workflow.key == "PROJECT_TYPE_MULTI" && workflow.value == "y") {
                 const prjHandler = new ProjectsHandler(this.variables);
-                prjHandler.execValidation();
-                if(this.apply === true) {
-                    prjHandler.apply();
+                await prjHandler.execValidation();
+                if (this.apply === true) {
+                    await prjHandler.apply();
+                }
+            } else if (workflow.key == "SOURCE_GO") {
+                const bondgoPrjHandler = new BondGoProjectHandler(this.variables);
+                await bondgoPrjHandler.execValidation();
+                if (this.apply === true) {
+                    await bondgoPrjHandler.apply();
                 }
             }
         }
     }
-
-    //  MULTI_TARGET (simulate)
-    //  PROJECT_TYPE (templatesim)
 
     insertNewVariable(name: string, value: string) {
         const alreadyExists = this.variables.findIndex(elm => elm.name === name);
@@ -87,7 +135,8 @@ export class ValidateApplyStrategy implements IStrategy {
         }
         const entry: IVariable = {
             name: name,
-            value: value.replace(/"/g, '').trim()
+            value: value.replace(/"/g, '').trim(),
+            toGenerate: false
         };
         this.variables.push(entry);
     }
@@ -119,6 +168,7 @@ export class ValidateApplyStrategy implements IStrategy {
 
         // read .config and local.mk and store all the variables;
         // based on the project type, exec the validation 
+        this.checkTools();
 
         for (const configFileToRead of this.configsFileToRead) {
 

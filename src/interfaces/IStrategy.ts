@@ -4,6 +4,8 @@ export interface IStrategy {
 }
 
 export interface IWorkflowHandler {
+    checkInternalDependencies(): void;
     execValidation(): void;
+    execOptionalDependencies(): void;
     apply(): void;
 }
