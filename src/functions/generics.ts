@@ -1,6 +1,11 @@
 import axios, { AxiosResponse, Method } from 'axios';
 import { ISDEBUGACTIVE } from '..';
 
+const greenCheckbox = "\u2705";
+const redCheckbox = "\u26D4";
+const yellowCheckbox = "\u26A0"; 
+const violetCheckbox = "\u2753"; 
+
 export async function askQuestion(question: string) {
     return new Promise((resolve, reject) => {
         const readline = require('readline').createInterface({
@@ -40,19 +45,19 @@ export async function productionLog(message: string, type: "error" | "warning" |
     switch (type) {
         case "error":
             color = "\x1b[31m";
-            startingMessage = "[ERROR]  ";
+            startingMessage = `${redCheckbox}`;
             break
         case "success":
             color = "\x1b[32m";
-            startingMessage = "[OK]  "
+            startingMessage = `${greenCheckbox}`
             break;
         case "warning":
             color = "\x1b[33m";
-            startingMessage = "[WARNING]"
+            startingMessage = `${yellowCheckbox} `
             break;
         case "ask":
             color = "\x1b[35m";
-            startingMessage = "[ASK] "
+            startingMessage = `${violetCheckbox}`
             message += " (type y to continue with default, type the name of the variable to change it) "
     }
     if (type == "ask") {

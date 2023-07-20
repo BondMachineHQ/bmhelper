@@ -97,7 +97,6 @@ export class BondGoProjectHandler extends AbstractHandler {
 
         this.workingDir = this.variables.find(elm => elm.name === "WORKING_DIR").value;
 
-        // WIP: WRITE GENERATED.MK FILE
-
+        this.writeGenerateMk();
     }
 }

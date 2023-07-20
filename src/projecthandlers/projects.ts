@@ -63,12 +63,10 @@ export class ProjectsHandler extends AbstractHandler {
         const jsonToRead = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDESC");
 
         if(!fs.existsSync(templateDir.value)) {
-            productionLog("The template directory specified "+templateDir.value+" does not exist", "error");
             throw new Error("the template directory selected "+templateDir.value+" does not exist")
         }
 
         if(!fs.existsSync(jsonToRead.value)) {
-            productionLog("The json file specified "+jsonToRead.value+" does not exist", "error");
             throw new Error("the json file specified "+jsonToRead.value+" does not exist")
         }
 
@@ -103,8 +101,11 @@ export class ProjectsHandler extends AbstractHandler {
     }
 
     private writeGeneratedVariables() {
-        const valueOfGlobalMkFile = "SOURCE_MULTI=" + this.projectsListName + "\n";
-        fs.writeFileSync(`${this.globalGeneratedMkFile}`, valueOfGlobalMkFile, 'utf8')
+        this.generateMkVariables.push({
+            name: "SOURCE_MULTI",
+            value: this.projectsListName,
+            toGenerate: false
+        })
     }
 
 
@@ -180,35 +181,6 @@ export class ProjectsHandler extends AbstractHandler {
         this.writeGeneratedVariables();
     }
 
-    public async execOptionalDependencies() {
-        for(const optDependency of this.optionalDependencies) {
-            let found: boolean = false;
-            for (const variable of this.variables) {
-                if (optDependency.name == variable.name) {
-                    productionLog("Found "+variable.name, "success");
-                    found = true;
-                    continue
-                }
-            }
-            if (found == false) {
-                const reply = (await productionLog(optDependency.name+" not found. Do you want to use the default value: "+optDependency.value+" ?", "ask") as string)
-                if (reply.toLowerCase() == "y" || reply.toLowerCase() == "yes") {
-                    this.variables.push({
-                        name: optDependency.name,
-                        value: optDependency.value,
-                        toGenerate: false
-                    })
-                } else {
-                    this.variables.push({
-                        name: optDependency.name,
-                        value: reply,
-                        toGenerate: false
-                    })
-                }
-            }
-        }
-    }
-
     public async apply() {
 
         await this.execValidation();
@@ -218,6 +190,7 @@ export class ProjectsHandler extends AbstractHandler {
 
         this.readTemplateJson();
         this.duplicateFolder();
+        this.writeGenerateMk();
 
     }
 }

@@ -8,4 +8,5 @@ export interface IWorkflowHandler {
     execValidation(): void;
     execOptionalDependencies(): void;
     apply(): void;
+    writeGenerateMk(): void;
 }

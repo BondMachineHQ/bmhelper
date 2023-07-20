@@ -55,45 +55,11 @@ export class ValidateApplyStrategy implements IStrategy {
         this.workflowsSelected = [];
         this.configsFileToRead = [".config", "local.mk"]
         this.apply = apply;
-        this.tools = [
-            "basm",
-            "bmanalysis",
-            "bmnumbers",
-            "bmstack",
-            "bondgo",
-            "bondmachine",
-            "melbond",
-            "neuralbond",
-            "procbuilder",
-            "simbox"
-        ]
-    }
-
-    checkTools() {
-
-        const missingTools: string[] = [];
-        for (const tool of this.tools) {
-            try {
-                execSync("which " + tool)
-            } catch (err) {
-                missingTools.push(tool);
-            }
-        }
-
-        if (missingTools.length > 0) {
-            for(const missingTool of missingTools) {
-                productionLog("Tool not found: " + missingTool, "error");
-            }
-            throw new Error("missing tool");
-        }
-
-        productionLog("Tools found", "success");
     }
 
     getWorkflow() {
 
         const keys = this.workflows.map(elm => elm.key);
-
         for (const variable of this.variables) {
             if (keys.includes(variable.name)) {
                 this.workflowsSelected.push(this.workflows.find(elm => elm.key === variable.name))
@@ -101,12 +67,10 @@ export class ValidateApplyStrategy implements IStrategy {
         }
 
         if (this.workflowsSelected.length == 0) {
-            productionLog("No workflows could be identified based on the scanned files.", "error");
-            throw new Error("No workflow found")
+            throw new Error("No workflows could be identified based on the scanned files.")
         }
 
-        productionLog("Workflows detected: " + this.workflowsSelected.map(elm => elm.name).join(","), "success");
-        debugLog("Workflows detected: " + this.workflowsSelected.map(elm => elm.name).join(","), "success")
+        productionLog("Workflow detected: " + this.workflowsSelected.map(elm => elm.name).join(",")+".", "success");
     }
 
     public async exec() {
@@ -168,7 +132,6 @@ export class ValidateApplyStrategy implements IStrategy {
 
         // read .config and local.mk and store all the variables;
         // based on the project type, exec the validation 
-        this.checkTools();
 
         for (const configFileToRead of this.configsFileToRead) {
 

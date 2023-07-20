@@ -2,19 +2,18 @@ import { execSync } from "child_process";
 import { debugLog, productionLog } from "./functions/generics";
 import { CreateStrategy } from "./strategies/create";
 import { ValidateApplyStrategy } from "./strategies/validateapply";
+import { existsSync } from "fs";
+import { DoctorStrategy } from "./strategies/doctor";
 
 // there will be three actions 
 // 1. create -> create the projects with Makefile and kconfig
 
-export type actionT = "create"  | "validate" | "apply" // "delete", "update" ...
+export type actionT = "create"  | "validate" | "apply" | "doctor"
 export let ISDEBUGACTIVE:boolean = false;
 
 
 function buildErrorAndReturn(error: string) {
-    const errorToReturn: { error: string } = {
-        error: error
-    };
-    productionLog(JSON.stringify(errorToReturn), "error");
+    productionLog(error, "error");
     execSync("rm -rf .bm-resources")
     process.exit(1);
 }
@@ -31,9 +30,17 @@ async function main() {
         buildErrorAndReturn("Action must be specified");
     }
 
+    if (existsSync(".bm-resources")) {
+        execSync("rm -rf .bm-resources");
+    }
+    if (existsSync("bm-resources")) {
+        execSync("rm -rf bm-resources");
+    }
+
     // clone bm resources repository
     execSync("git clone -q https://github.com/BondMachineHQ/bmresources.git");
     execSync("mv bmresources .bm-resources")
+    const doctorStrategy = new DoctorStrategy(paramsPassedByCli);
 
     switch (action) {
         case "create":
@@ -41,30 +48,39 @@ async function main() {
             try {
                 createStrategy.check();
             } catch (err) {
-                buildErrorAndReturn("Params are not correct; " + err.message);
+                buildErrorAndReturn(err.message);
             }
             try {
                 createStrategy.execute();
             } catch (err) {
-                buildErrorAndReturn("Error during execution of action requested; " + err.message);
+                buildErrorAndReturn(err.message);
+            }
+            break
+        case "doctor":
+            try {
+                doctorStrategy.checkDependencies();
+            } catch (err) {
+                buildErrorAndReturn(err.message);
             }
             break
         case "validate":
             const validateStrategy = new ValidateApplyStrategy(false);
             try {
+                doctorStrategy.checkDependencies();
                 await validateStrategy.check();
                 await validateStrategy.exec();
             } catch (err) {
-                buildErrorAndReturn("Params are not correct; " + err.message);
+                buildErrorAndReturn(err.message);
             }
             break
         case "apply":
             const applyStrategy = new ValidateApplyStrategy(true);
             try {
+                doctorStrategy.checkDependencies();
                 await applyStrategy.check();
                 await applyStrategy.exec();
             } catch (err) {
-                buildErrorAndReturn("Params are not correct; " + err.message);
+                buildErrorAndReturn(err.message);
             }
             break
         default:
@@ -74,7 +90,7 @@ async function main() {
 
     execSync("rm -rf .bm-resources")
 
-    productionLog(`Project has been successfully ${action}`, "success")
+    productionLog(`Project has been successfully ${action == "doctor" ? "visited": action}.`, "success")
     process.exit(0);
 
 }

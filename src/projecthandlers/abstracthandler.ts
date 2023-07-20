@@ -8,9 +8,10 @@ export class AbstractHandler implements IWorkflowHandler {
 
     protected optionalDependencies: IVariable[];
     protected mandatoryDependencies: IMandatoryDependencies[];
-    protected generateMkVariables: IGenerateVariable[];
+    protected generateMkVariables: IVariable[];
 
     constructor(protected variables: IVariable[]) {
+        this.generateMkVariables = [];
     }
 
     checkInternalDependencies(): void {
@@ -25,7 +26,7 @@ export class AbstractHandler implements IWorkflowHandler {
             for (const variable of this.variables) {
 
                 if (dep.name == variable.name) {
-                    productionLog("Found "+variable.name, "success");
+                    productionLog("Found "+variable.name+".", "success");
                     found = true;
                     continue
                 }
@@ -39,7 +40,7 @@ export class AbstractHandler implements IWorkflowHandler {
             for(const depNotFound of dependenciesNotFound) {
                 productionLog("Not found "+depNotFound, "error");
             }
-            throw new Error("Dependency not aligned for variable: ")
+            throw new Error("Dependency not aligned for variable")
         }
 
         // check for file dependencies
@@ -62,7 +63,6 @@ export class AbstractHandler implements IWorkflowHandler {
             let found: boolean = false;
             for (const variable of this.variables) {
                 if (optDependency.name == variable.name) {
-                    productionLog("Found "+variable.name, "success");
                     found = true;
                     continue
                 }
@@ -75,6 +75,7 @@ export class AbstractHandler implements IWorkflowHandler {
                     optDependency.value = reply;
                     this.variables.push(optDependency)
                 }
+                this.generateMkVariables.push(optDependency);
             }
         }
 
@@ -85,6 +86,19 @@ export class AbstractHandler implements IWorkflowHandler {
             fs.writeFileSync(variable.value, variable.content, 'utf-8');
         }
     }
+
+    public writeGenerateMk() {
+        let generateMkFile: string[] = [];
+        for(const genMk of this.generateMkVariables) {
+            generateMkFile.push(`${genMk.name}=${genMk.value}`);
+        }
+        if (generateMkFile.length == 0) {
+            return
+        }
+        const generatedMkFileToDump = generateMkFile.join("\n");
+        fs.writeFileSync(`generated.mk`, generatedMkFileToDump, 'utf8');
+    }
+
     apply(): void {
         throw new Error("Method not implemented.");
     }
