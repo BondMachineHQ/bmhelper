@@ -43,10 +43,10 @@ export class DoctorStrategy {
         for (const executable of this.executablesNecessaryBefore) {
             try {
                 execSync(`which ${executable}`, { stdio: 'ignore' });
-              } catch (error) {
+            } catch (error) {
                 productionLog("Mandatory dependency not found: " + executable, "error");
                 //throw new Error("error on mandatory dependency")
-              }
+            }
         }
 
         const missingBmTools: string[] = [];
@@ -59,25 +59,26 @@ export class DoctorStrategy {
         }
 
         if (missingBmTools.length > 0) {
-            for(const missingTool of missingBmTools) {
+            for (const missingTool of missingBmTools) {
                 productionLog("BondMachine tool not found: " + missingTool, "error");
             }
             //throw new Error("missing tool");
+        } else {
+            productionLog("All BondMachine tools has been found.", "success");
         }
-
-        productionLog("All BondMachine tools has been found.", "success");
 
         const missingOptionalTools: string[] = [];
         for (const tool of this.optionalTools) {
             try {
-                execSync("which " + tool)
+                execSync("which " + tool, { stdio: 'ignore' })
+                productionLog("Optional tool found: " + tool, "success");
             } catch (err) {
                 missingOptionalTools.push(tool);
             }
         }
 
         if (missingOptionalTools.length > 0) {
-            for(const missingOptTool of missingOptionalTools) {
+            for (const missingOptTool of missingOptionalTools) {
                 productionLog("Optional tool not found: " + missingOptTool, "warning");
             }
         }
