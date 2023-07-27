@@ -89,8 +89,13 @@ async function main() {
     }
 
     execSync("rm -rf .bm-resources")
-
-    productionLog(`Project has been successfully ${action == "doctor" ? "visited": action}.`, "success")
+    
+    if (action == "doctor") {
+        productionLog(`Dependencies checked`, "success")
+    } else {
+        productionLog(`Project has been successfully ${action}.`, "success")
+    }
+    
     process.exit(0);
 
 }

@@ -78,13 +78,13 @@ export class ValidateApplyStrategy implements IStrategy {
         for (const workflow of this.workflowsSelected) {
             if (workflow.key == "PROJECT_TYPE_MULTI" && workflow.value == "y") {
                 const prjHandler = new ProjectsHandler(this.variables);
-                await prjHandler.execValidation();
+                await prjHandler.execValidation(this.apply);
                 if (this.apply === true) {
                     await prjHandler.apply();
                 }
             } else if (workflow.key == "SOURCE_GO") {
                 const bondgoPrjHandler = new BondGoProjectHandler(this.variables);
-                await bondgoPrjHandler.execValidation();
+                await bondgoPrjHandler.execValidation(this.apply);
                 if (this.apply === true) {
                     await bondgoPrjHandler.apply();
                 }

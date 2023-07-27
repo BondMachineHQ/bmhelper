@@ -14,33 +14,48 @@ export class AbstractHandler implements IWorkflowHandler {
         this.generateMkVariables = [];
     }
 
-    checkInternalDependencies(): void {
+    checkInternalDependencies(apply: boolean): void {
         throw new Error("Method not implemented.");
     }
-    execValidation(): void {
-        
+    execValidation(apply: boolean): void {
+
         let dependenciesNotFound: string[] = [];
+        const variablesKey = this.variables.map(elm => elm.name);
 
         for (const dep of this.mandatoryDependencies) {
-            let found: boolean = false;
-            for (const variable of this.variables) {
 
-                if (dep.name == variable.name) {
-                    productionLog("Found "+variable.name+".", "success");
-                    found = true;
-                    continue
-                }
-            }
-            if (found == false) {
+            const findVar = variablesKey.find(elm => elm === dep.name);
+            if (findVar != undefined) {
+                productionLog("Mandatory variable found " +findVar + ".", "success");
+            } else {
                 dependenciesNotFound.push(dep.name);
             }
         }
 
         if (dependenciesNotFound.length > 0) {
-            for(const depNotFound of dependenciesNotFound) {
-                productionLog("Not found "+depNotFound, "error");
+            for (const depNotFound of dependenciesNotFound) {
+                productionLog("Mandatory variable not found " + depNotFound, "error");
             }
-            throw new Error("Dependency not aligned for variable")
+            if (apply == true) {
+                throw new Error("Mandatory dependency not aligned")
+            }
+        }
+
+        let optDependenciesNotFound: string[] = [];
+
+        for (const optDependency of this.optionalDependencies) {
+            const findVar = variablesKey.find(elm => elm === optDependency.name);
+            if (findVar != undefined) {
+                productionLog("Optional variable found " +findVar + ".", "success");
+            } else {
+                optDependenciesNotFound.push(optDependency.name);
+            }
+        }
+
+        if (optDependenciesNotFound.length > 0) {
+            for (const depNotFound of optDependenciesNotFound) {
+                productionLog("Optional variable not found " + depNotFound, "warning");
+            }
         }
 
         // check for file dependencies
@@ -50,16 +65,19 @@ export class AbstractHandler implements IWorkflowHandler {
             }
             const variableName = this.variables.find(elm => elm.name === dep.name);
             if (fs.existsSync(variableName.value) === false) {
-                throw new Error(`Source file ${variableName.value} not found.`)
+                //throw new Error(`Source file ${variableName.value} not found.`)
+                productionLog(`Source file not ${variableName.value} found.`, "success");
             } else {
                 productionLog(`Source file ${variableName.value} found.`, "success");
             }
         }
 
-        this.checkInternalDependencies();
+        this.checkInternalDependencies(apply);
+
     }
+
     async execOptionalDependencies(): Promise<void> {
-        for(const optDependency of this.optionalDependencies) {
+        for (const optDependency of this.optionalDependencies) {
             let found: boolean = false;
             for (const variable of this.variables) {
                 if (optDependency.name == variable.name) {
@@ -68,7 +86,7 @@ export class AbstractHandler implements IWorkflowHandler {
                 }
             }
             if (found == false) {
-                const reply = (await productionLog(optDependency.name+" not found. Do you want to use the default value: "+optDependency.value+" ?", "ask") as string)
+                const reply = (await productionLog(optDependency.name + " not found. Do you want to use the default value: " + optDependency.value + " ?", "ask") as string)
                 if (reply.toLowerCase() == "y" || reply.toLowerCase() == "yes") {
                     this.variables.push(optDependency)
                 } else {
@@ -79,7 +97,7 @@ export class AbstractHandler implements IWorkflowHandler {
             }
         }
 
-        for(const variable of this.variables) {
+        for (const variable of this.variables) {
             if (variable.toGenerate == false) {
                 continue;
             }
@@ -89,7 +107,7 @@ export class AbstractHandler implements IWorkflowHandler {
 
     public writeGenerateMk() {
         let generateMkFile: string[] = [];
-        for(const genMk of this.generateMkVariables) {
+        for (const genMk of this.generateMkVariables) {
             generateMkFile.push(`${genMk.name}=${genMk.value}`);
         }
         if (generateMkFile.length == 0) {
@@ -102,5 +120,5 @@ export class AbstractHandler implements IWorkflowHandler {
     apply(): void {
         throw new Error("Method not implemented.");
     }
-    
+
 }

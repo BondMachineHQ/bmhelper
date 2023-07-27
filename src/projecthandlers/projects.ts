@@ -58,7 +58,7 @@ export class ProjectsHandler extends AbstractHandler {
         this.globalGeneratedMkFile = "generated.mk"
     }
 
-    checkInternalDependencies(): void {
+    checkInternalDependencies(apply: boolean): void {
         const templateDir = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDIR");
         const jsonToRead = this.variables.find(elm => elm.name === "MULTI_TEMPLATEDESC");
 
@@ -183,7 +183,7 @@ export class ProjectsHandler extends AbstractHandler {
 
     public async apply() {
 
-        await this.execValidation();
+        await this.execValidation(true);
         await this.execOptionalDependencies();
 
         this.workingDir = this.variables.find(elm => elm.name === "WORKING_DIR").value;

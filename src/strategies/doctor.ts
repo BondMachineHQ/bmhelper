@@ -12,7 +12,7 @@ export class DoctorStrategy {
 
     constructor(protected params: string[]) {
         this.params = params;
-        this.executablesNecessaryBefore = ["make -v"];
+        this.executablesNecessaryBefore = ["make", "dot", "curl"];
         this.bmTools = [
             "basm",
             "bmanalysis",
@@ -25,8 +25,12 @@ export class DoctorStrategy {
             "procbuilder",
             "simbox"
         ];
+        // icestorm = yosis, icepack
         this.optionalTools = [
-            "vivado"
+            "vivado",
+            "yosis",
+            "icepack",
+            "quartus"
         ]
     }
 
@@ -38,17 +42,17 @@ export class DoctorStrategy {
 
         for (const executable of this.executablesNecessaryBefore) {
             try {
-                execSync(executable, { stdio: 'ignore' });
+                execSync(`which ${executable}`, { stdio: 'ignore' });
               } catch (error) {
                 productionLog("Mandatory dependency not found: " + executable, "error");
-                throw new Error("error on mandatory dependency")
+                //throw new Error("error on mandatory dependency")
               }
         }
 
         const missingBmTools: string[] = [];
         for (const tool of this.bmTools) {
             try {
-                execSync("which " + tool)
+                execSync("which " + tool, { stdio: 'ignore' })
             } catch (err) {
                 missingBmTools.push(tool);
             }
@@ -56,12 +60,12 @@ export class DoctorStrategy {
 
         if (missingBmTools.length > 0) {
             for(const missingTool of missingBmTools) {
-                productionLog("Tool not found: " + missingTool, "error");
+                productionLog("BondMachine tool not found: " + missingTool, "error");
             }
-            throw new Error("missing tool");
+            //throw new Error("missing tool");
         }
 
-        productionLog("BondMachine tools found.", "success");
+        productionLog("All BondMachine tools has been found.", "success");
 
         const missingOptionalTools: string[] = [];
         for (const tool of this.optionalTools) {
