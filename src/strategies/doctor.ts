@@ -43,6 +43,7 @@ export class DoctorStrategy {
         for (const executable of this.executablesNecessaryBefore) {
             try {
                 execSync(`which ${executable}`, { stdio: 'ignore' });
+                productionLog("Mandatory dependency found: " + executable, "success");
             } catch (error) {
                 productionLog("Mandatory dependency not found: " + executable, "error");
                 //throw new Error("error on mandatory dependency")
@@ -53,6 +54,7 @@ export class DoctorStrategy {
         for (const tool of this.bmTools) {
             try {
                 execSync("which " + tool, { stdio: 'ignore' })
+                productionLog("BondMachine tool " + tool + " found", "success");
             } catch (err) {
                 missingBmTools.push(tool);
             }
