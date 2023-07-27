@@ -1,10 +1,15 @@
 import axios, { AxiosResponse, Method } from 'axios';
 import { ISDEBUGACTIVE } from '..';
 
-const greenCheckbox = "\u2705";
-const redCheckbox = "\u26D4";
-const yellowCheckbox = "\u26A0"; 
-const violetCheckbox = "\u2753"; 
+// const greenCheckbox = "\u2705";
+// const redCheckbox = "\u26D4";
+// const yellowCheckbox = "\u26A0"; 
+// const violetCheckbox = "\u2753"; 
+
+const greenCheckbox = "[ OK ]";
+const redCheckbox = "[ ERROR ]";
+const yellowCheckbox = "[ WARNING ]"; 
+const violetCheckbox = "[ ASK ]"; 
 
 export async function askQuestion(question: string) {
     return new Promise((resolve, reject) => {

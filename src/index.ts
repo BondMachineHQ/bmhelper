@@ -38,7 +38,7 @@ async function main() {
     }
 
     // clone bm resources repository
-    execSync("git clone -q https://github.com/BondMachineHQ/bmresources.git");
+    execSync("git clone -q https://github.com/BondMachineHQ/bmresources.git", { stdio: 'ignore' });
     execSync("mv bmresources .bm-resources")
     const doctorStrategy = new DoctorStrategy(paramsPassedByCli);
 
