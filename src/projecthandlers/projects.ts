@@ -183,7 +183,7 @@ export class ProjectsHandler extends AbstractHandler {
 
     public async apply() {
 
-        await this.execValidation(true);
+        //await this.execValidation(true);
         await this.execOptionalDependencies();
 
         this.workingDir = this.variables.find(elm => elm.name === "WORKING_DIR").value;

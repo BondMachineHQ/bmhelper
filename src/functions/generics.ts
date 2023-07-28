@@ -50,24 +50,24 @@ export async function productionLog(message: string, type: "error" | "warning" |
     switch (type) {
         case "error":
             color = "\x1b[31m";
-            startingMessage = `${redCheckbox}`;
+            startingMessage = `${redCheckbox} \t`;
             break
         case "success":
             color = "\x1b[32m";
-            startingMessage = `${greenCheckbox}`
+            startingMessage = `${greenCheckbox} \t`
             break;
         case "warning":
             color = "\x1b[33m";
-            startingMessage = `${yellowCheckbox} `
+            startingMessage = `${yellowCheckbox} \t`
             break;
         case "ask":
             color = "\x1b[35m";
-            startingMessage = `${violetCheckbox}`
+            startingMessage = `${violetCheckbox} \t`
             message += " (type y to continue with default, type the name of the variable to change it) "
     }
     if (type == "ask") {
-        return await askQuestion(`${color+" "+startingMessage + " " + message}`) as string;
+        return await askQuestion(`${color+" "+startingMessage + "\x1b[37m" + " " + message}`) as string;
     }
     
-    console.log(color, `${startingMessage + " " + message}`);
+    console.log(color, `${startingMessage}` + "\x1b[37m" + " " + message);
 }
