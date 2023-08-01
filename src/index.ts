@@ -90,10 +90,16 @@ async function main() {
 
     execSync("rm -rf .bm-resources")
     
-    if (action == "doctor") {
-        productionLog(`Dependencies checked`, "success")
-    } else {
-        productionLog(`Project has been successfully ${action}.`, "success")
+    switch (action) {
+        case "apply":
+            productionLog(`Project has been successfully initialized.`, "success")
+        break;
+        case "doctor":
+            productionLog(`Dependencies checked`, "success")
+        break;
+        case "validate":
+            productionLog(`Project has been successfully ${action}.`, "success")
+        break;
     }
     
     process.exit(0);

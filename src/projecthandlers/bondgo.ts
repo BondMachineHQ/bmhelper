@@ -39,6 +39,7 @@ export class BondGoProjectHandler extends AbstractHandler {
     private workingDir: string;
     private globalGeneratedMkFile: string;
     private targetBoard: string;
+    private filesToCheck: string[];
 
     constructor(protected variables: IVariable[]) {
         super(variables)
@@ -65,6 +66,7 @@ export class BondGoProjectHandler extends AbstractHandler {
         this.workingDir = "";
         this.globalGeneratedMkFile = "generated.mk";
         this.targetBoard = "";
+        this.filesToCheck = [".xdc"]
     }
 
     public checkInternalDependencies(apply: boolean) {
@@ -125,7 +127,14 @@ export class BondGoProjectHandler extends AbstractHandler {
         }
 
         for (const targetFile of targetBoardFiles) {
-            execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
+            const foundfile = this.filesToCheck.find(elm => targetFile.includes(elm));
+            if (foundfile == undefined) {
+                execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
+            } else {
+                if(fs.existsSync(targetFile) == false) {
+                    execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
+                } 
+            }   
         }
     }
 
