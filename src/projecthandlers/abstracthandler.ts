@@ -27,7 +27,7 @@ export class AbstractHandler implements IWorkflowHandler {
 
             const findVar = variablesKey.find(elm => elm === dep.name);
             if (findVar != undefined) {
-                productionLog("Mandatory variable found " +findVar + ".", "success");
+                productionLog("Mandatory variable found " +findVar, "success");
             } else {
                 dependenciesNotFound.push(dep.name);
             }
@@ -47,7 +47,7 @@ export class AbstractHandler implements IWorkflowHandler {
         for (const optDependency of this.optionalDependencies) {
             const findVar = variablesKey.find(elm => elm === optDependency.name);
             if (findVar != undefined) {
-                productionLog("Required optional variable found " +findVar + ".", "success");
+                productionLog("Mandatory variable found " +findVar, "success");
             } else {
                 optDependenciesNotFound.push(optDependency.name);
             }
@@ -55,7 +55,7 @@ export class AbstractHandler implements IWorkflowHandler {
 
         if (optDependenciesNotFound.length > 0) {
             for (const depNotFound of optDependenciesNotFound) {
-                productionLog("Required optional variable not found " + depNotFound, "warning");
+                productionLog("Mandatory variable not found " + depNotFound, "warning");
             }
         }
 
@@ -63,7 +63,7 @@ export class AbstractHandler implements IWorkflowHandler {
         for(const ignoreDep of this.ignoreDependencies) {
             const findVar = variablesKey.find(elm => elm === ignoreDep.name);
             if (findVar != undefined) {
-                productionLog("Non mandatory variable found: " +findVar + ".", "success");
+                productionLog("Optional variable found: " +findVar, "success");
             } else {
                 ignoreDependenciesNotFound.push(ignoreDep.name);
             }
@@ -71,7 +71,7 @@ export class AbstractHandler implements IWorkflowHandler {
 
         if (ignoreDependenciesNotFound.length > 0) {
             for (const depNotFound of ignoreDependenciesNotFound) {
-                productionLog("Non mandatory variable not found: " + depNotFound + ".", "warning");
+                productionLog("Optional variable not found: " + depNotFound, "warning");
             }
         }
 
@@ -83,9 +83,9 @@ export class AbstractHandler implements IWorkflowHandler {
             const variableName = this.variables.find(elm => elm.name === dep.name);
             if (fs.existsSync(variableName.value) === false) {
                 //throw new Error(`Source file ${variableName.value} not found.`)
-                productionLog(`Source file not ${variableName.value} found.`, "success");
+                productionLog(`Source file not ${variableName.value} found`, "success");
             } else {
-                productionLog(`Source file ${variableName.value} found.`, "success");
+                productionLog(`Source file ${variableName.value} found`, "success");
             }
         }
 
@@ -119,31 +119,6 @@ export class AbstractHandler implements IWorkflowHandler {
                 fs.writeFileSync(variable.value, variable.content, 'utf-8');
             }
         }
-
-        /*
-        // at the moment we do not set those variables
-        for(const ignoreDep of this.ignoreDependencies) {
-            let found: boolean = false;
-            for (const variable of this.variables) {
-                if (ignoreDep.name == variable.name) {
-                    found = true;
-                    continue
-                }
-            }
-            if (found == false) {
-                this.variables.push(ignoreDep);
-                productionLog("Not obligatory variable not found " + ignoreDep.name + ", using default value: "+ignoreDep.value, "warning");
-
-                this.generateMkVariables.push(ignoreDep);
-
-                const variable = this.variables.find(elm => elm.name == ignoreDep.name)
-                if (variable.toGenerate == false) {
-                    continue;
-                }
-                fs.writeFileSync(variable.value, variable.content, 'utf-8');
-            }
-        }
-        */
     }
 
     public writeGenerateMk() {
@@ -151,9 +126,7 @@ export class AbstractHandler implements IWorkflowHandler {
         for (const genMk of this.generateMkVariables) {
             generateMkFile.push(`${genMk.name}=${genMk.value}`);
         }
-        if (generateMkFile.length == 0) {
-            return
-        }
+        generateMkFile.push(`ROOTDIR=.`);
         const generatedMkFileToDump = generateMkFile.join("\n");
         fs.writeFileSync(`generated.mk`, generatedMkFileToDump, 'utf8');
     }

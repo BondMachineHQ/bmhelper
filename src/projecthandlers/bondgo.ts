@@ -105,7 +105,7 @@ export class BondGoProjectHandler extends AbstractHandler {
                 }
             } else {
                 this.targetBoard = boardInts[0].replace("XILINX_BOARD_", "").toLowerCase();
-                productionLog("Found target board: " + this.targetBoard + ".", "success");
+                productionLog("Found target board: " + this.targetBoard, "success");
             }
         }
     }
