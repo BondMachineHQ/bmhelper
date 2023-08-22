@@ -1,53 +1,62 @@
-# Projects
+# BM Helper
 
-A BondMachine project is a directory that contains all the necessary files to generate the firmware for a specific board.
-The project is created with the **bmhelper create** command line tool, which is installed with the BondMachine framework. It is configured using a Kconfig file, with commands similar to the Linux kernel (for example: make menuconfig). It is then validated and completed with the **bmhelper validate** and **bmhelper apply** commands.
-Once the project is applied, it is possible to generate the firmware and make all the other operations with the **make** command and several targets.
+BondMachine Helper is a tool created to help the user in creating projects using the bondmachime framework and to automate all the various procedures necessary to configure projects without having difficulties.
 
-## Project workflow
+### How to use
 
-The project workflow is divided into several steps:
-- project creation
-- project configuration
-- project validation
-- project apply
-- make targets execution
+*Supported Project types*:
 
-### Project creation
+1. neural network
 
-An enpty project can be created with the following command:
 
-```
-bmhelper create --project_name project_test
-```
+    ```
+    bmhelper create --project_name project_test --board zedboard --project_type neural_network --n_inputs 4 --n_outputs 2 --source_neuralbond banknote.json
+    ```
+    This is a ZYNQ FPGA based project, it means that it is also possible to create a custom buildroot linux sdcard-image to flash an sdcard.
 
-This command will create a project with the name **project_test** in the current directory. The project will be created with the default configuration. The default configuration is defined in the *bmhelper* tool and can be changed with the *make menuconfig* command (or any other command that can be used to configure the Kconfig file).
+    As you can see, inside the project there are all the necessary tools to generate the bitstream (.bin) and the hardware (.hwh) files to program the FPGA. <br>
+    In details:
+    - *bmapi.json* 
+    - *bmapi.mk* 
+    - *bminfo.json* 
+    - *buildroot.mk* 
+    - *crosscompile.mk* 
+    - *local.mk* 
+    - *Makefile* 
+    - *neuralbondconfig.json* 
+    - *neurons* 
+    - *simbatch.mk* 
+    - *simbatch.py* 
+    - *vivadoAXIcomment.sh* 
 
-### Project configuration
+    <br />
 
-The project configuration is defined in the **Kconfig** file. The **Kconfig** file is a text file that defines the configuration possibilities of the project. It is similar to the **Kconfig** file used in the Linux kernel. With a kconfig compatible tool the **Kconfig** file can be used to generate the specific configuration.
+    if you want to generate the firmware right away without delay, use the following command
+    ```
+    make design_bitstream
+    ```
+    and enjoy the bitstream generation.<br />
+    You will find all the results in the *working_dir* directory. Of course you need *Vivado* in your local machine.
 
-For example, the **make menuconfig** command will open a menu that allows you to configure the project. The menu is similar to the menu used to configure the Linux kernel. The menu is divided into several sections. Each section contains a set of configuration. The details of each configuration are described in the help of the menu. The menu is used to configure the **.config** file. The **.config** file is used by the project Makefile to configure the project and carry out the operations. 
+    If you want to directly deploy the bitstream on a board, run the command
+    ```
+    make deploy
+    ```
+    and enjoy the full automation.<br />
+    This command will also create the high level application with the programming language you prefer.<br />
+    But for this, it is necessary that you set something manually.
+    You might be wondering how you can set the target board and how you can autodeploy. Well, to do this, there are files with the .mk extension where you can set the variables needed to deploy.
+    The detailed description of what the make commands do is below.
 
-```bash
-make menuconfig
-```
+<br />
 
-If preffered, it is possible to use a **local.mk** file to configure the project. The **local.mk** file is a text file that defines the configuration of the project directly specifying the variables. The project Makefile created by **bmhelper** will either use the **.config** file or the **local.mk** file to configure the project. The **.config** file has priority over the **local.mk** file. The **local.mk** file is useful when you want to configure the project with a script or with a tool that does not support the **.config** file.
+---
 
-Details on the configuration variables are described in the **Configuration variables** section.
+## The BondMachine Makefile user guide
 
-### Project validation
-
-WIP
-
-### Project apply
-
-WIP
-
-### Firmware generation and other targets
-
-After creating and appling a project, you can use the **make** command to generate firmware and perform other operations. The **make** command can be used with several targets. The targets are defined in the **Makefile** file and are described in the following sections.
+After creating a project, you can use the **make** command to manage the project.<br />
+In every project there is a **Makefile** which defines a series of tasks that can be performed. With this special file you are able to manage the project.
+There are two parallel workflows that you can follow in order to generate the firmware but both of them have some steps in common. The common steps are:
 
 ```
 make bondmachine
@@ -126,13 +135,18 @@ make buildroot
 Create the custom buildroot linux sdcard-image.
 ```
 
-## Configuration variables
-
-Wether you are reading variables from the **Kconfig** file or from the **.mk** files, the syntax is the same. The following is the list of the most commonly used variables:
+## Makefile variables
 
 Inside a project there is a local.mk file which contains all the variables necessary to create a project. It is searched directly from the Makefile file. Eventually variables can be set in other **.mk** files and included in the local.mk file for convenience.
 
 The following is the list of commonly used **.mk** files inside a project (but you can also create your own):
+
+1. **local.mk**
+2. *deploy.mk*
+3. *bmapi.mk*
+4. *buildroot.mk*
+5. *crosscompile.mk*
+6. *simbatch.mk*
 
 ```
 deploy.mk
@@ -168,10 +182,4 @@ In this file are defined all the variables necessary to create a project
 
 ```
 bmapi.mk
-```
-
-### Build the executable
-```
-npm i 
-npm run compile && npm run build
 ```
