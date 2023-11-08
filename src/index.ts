@@ -8,9 +8,8 @@ import { DoctorStrategy } from "./strategies/doctor";
 // there will be three actions 
 // 1. create -> create the projects with Makefile and kconfig
 
-export type actionT = "create"  | "validate" | "apply" | "doctor"
+export type actionT = "help" | "create"  | "validate" | "apply" | "doctor" | "version"
 export let ISDEBUGACTIVE:boolean = false;
-
 
 function buildErrorAndReturn(error: string) {
     productionLog(error, "error");
@@ -37,12 +36,25 @@ async function main() {
         execSync("rm -rf bm-resources");
     }
 
-    // clone bm resources repository
-    execSync("git clone -q https://github.com/BondMachineHQ/bmresources.git", { stdio: 'ignore' });
-    execSync("mv bmresources .bm-resources")
+    if (action == "create" || action == "validate" || action == "apply") {
+        // clone bm resources repository
+        execSync("git clone -q https://github.com/BondMachineHQ/bmresources.git", { stdio: 'ignore' });
+        execSync("mv bmresources .bm-resources")
+    }
+
     const doctorStrategy = new DoctorStrategy(paramsPassedByCli);
 
     switch (action) {
+        case "version":
+            console.log(`\x1b[35m[ VERSION ] \x1b[37mBondmachine helper version: \x1b[34m ${require("../package.json").version} \x1b[37m`)
+            break
+        case "help":
+            console.log(`\x1b[35m[ HELP ] \x1b[37mRun \x1b[34m bmhelper create   \x1b[37m \t \t to create a new project.`)
+            console.log(`\x1b[35m[ HELP ] \x1b[37mRun \x1b[34m bmhelper create --list-examples \x1b[37m \t to list examples to start with.`)
+            console.log(`\x1b[35m[ HELP ] \x1b[37mRun \x1b[34m bmhelper validate \x1b[37m \t \t to validate an existing project.`)
+            console.log(`\x1b[35m[ HELP ] \x1b[37mRun \x1b[34m bmhelper apply    \x1b[37m \t \t to setup all dependencies and variables to an existing project.`)
+            console.log(`\x1b[35m[ HELP ] \x1b[37mGet more details here: \x1b[34m https://github.com/BondMachineHQ/bmexamples    \x1b[37m`)
+            break
         case "create":
             const createStrategy = new CreateStrategy(paramsPassedByCli);
             try {
@@ -58,7 +70,7 @@ async function main() {
             break
         case "doctor":
             try {
-                doctorStrategy.checkDependencies();
+                doctorStrategy.checkDependencies(true);
             } catch (err) {
                 buildErrorAndReturn(err.message);
             }
@@ -66,7 +78,7 @@ async function main() {
         case "validate":
             const validateStrategy = new ValidateApplyStrategy(false);
             try {
-                doctorStrategy.checkDependencies();
+                doctorStrategy.checkDependencies(false);
                 await validateStrategy.check();
                 await validateStrategy.exec();
             } catch (err) {
@@ -76,7 +88,7 @@ async function main() {
         case "apply":
             const applyStrategy = new ValidateApplyStrategy(true);
             try {
-                doctorStrategy.checkDependencies();
+                doctorStrategy.checkDependencies(false);
                 await applyStrategy.check();
                 await applyStrategy.exec();
             } catch (err) {

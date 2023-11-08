@@ -35,7 +35,7 @@ export class CreateStrategy {
 
         const projectsTemplate: string[] = [];
         for (const fileName of filesInFolder) {
-            if (fileName.startsWith("proj_")) {
+            if (fs.lstatSync(fileName).isDirectory()) {
                 projectsTemplate.push(fileName);
             }
         }

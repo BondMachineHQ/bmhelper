@@ -27,7 +27,7 @@ export class AbstractHandler implements IWorkflowHandler {
 
             const findVar = variablesKey.find(elm => elm === dep.name);
             if (findVar != undefined) {
-                productionLog("Mandatory variable found " +findVar, "success");
+                productionLog("Mandatory variable found " + findVar, "success");
             } else {
                 dependenciesNotFound.push(dep.name);
             }
@@ -47,7 +47,7 @@ export class AbstractHandler implements IWorkflowHandler {
         for (const optDependency of this.optionalDependencies) {
             const findVar = variablesKey.find(elm => elm === optDependency.name);
             if (findVar != undefined) {
-                productionLog("Mandatory variable found " +findVar, "success");
+                productionLog("Mandatory variable found " + findVar, "success");
             } else {
                 optDependenciesNotFound.push(optDependency.name);
             }
@@ -60,10 +60,10 @@ export class AbstractHandler implements IWorkflowHandler {
         }
 
         let ignoreDependenciesNotFound: string[] = [];
-        for(const ignoreDep of this.ignoreDependencies) {
+        for (const ignoreDep of this.ignoreDependencies) {
             const findVar = variablesKey.find(elm => elm === ignoreDep.name);
             if (findVar != undefined) {
-                productionLog("Optional variable found: " +findVar, "success");
+                productionLog("Optional variable found: " + findVar, "success");
             } else {
                 ignoreDependenciesNotFound.push(ignoreDep.name);
             }
@@ -77,15 +77,15 @@ export class AbstractHandler implements IWorkflowHandler {
 
         // check for file dependencies
         for (const dep of this.mandatoryDependencies) {
-            if (dep.type != "file") {
-                continue;
-            }
-            const variableName = this.variables.find(elm => elm.name === dep.name);
-            if (fs.existsSync(variableName.value) === false) {
-                //throw new Error(`Source file ${variableName.value} not found.`)
-                productionLog(`Source file not ${variableName.value} found`, "success");
+            if (dep.type === "file" || dep.type === "folder") {
+                const variableName = this.variables.find(elm => elm.name === dep.name);
+                if (fs.existsSync(variableName.value) === false) {
+                    productionLog(`Source ${dep.type} ${variableName.value} not found`, "error");
+                } else {
+                    productionLog(`Source ${dep.type} ${variableName.value} found`, "success");
+                }
             } else {
-                productionLog(`Source file ${variableName.value} found`, "success");
+                continue
             }
         }
 

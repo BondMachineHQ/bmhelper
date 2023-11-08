@@ -38,14 +38,23 @@ export class DoctorStrategy {
         return this.projectName;
     }
 
-    checkDependencies(): void {
+    checkDependencies(enableLog: boolean): void {
+
+        let errorFound: boolean = false;
+        let warningFound: boolean = false;
 
         for (const executable of this.executablesNecessaryBefore) {
             try {
                 execSync(`which ${executable}`, { stdio: 'ignore' });
-                productionLog("Mandatory dependency found: " + executable, "success");
+                if (enableLog) {
+                    productionLog("Mandatory dependency found: " + executable, "success");
+                }
             } catch (error) {
-                productionLog("Mandatory dependency not found: " + executable, "error");
+                if (enableLog) {
+                    productionLog("Mandatory dependency not found: " + executable, "error");
+                } else {
+                    errorFound = true;
+                }
                 //throw new Error("error on mandatory dependency")
             }
         }
@@ -54,7 +63,9 @@ export class DoctorStrategy {
         for (const tool of this.bmTools) {
             try {
                 execSync("which " + tool, { stdio: 'ignore' })
-                productionLog("BondMachine tool " + tool + " found", "success");
+                if (enableLog) {
+                    productionLog("BondMachine tool " + tool + " found", "success");
+                }
             } catch (err) {
                 missingBmTools.push(tool);
             }
@@ -62,18 +73,26 @@ export class DoctorStrategy {
 
         if (missingBmTools.length > 0) {
             for (const missingTool of missingBmTools) {
-                productionLog("BondMachine tool not found: " + missingTool, "error");
+                if (enableLog) {
+                    productionLog("BondMachine tool not found: " + missingTool, "error");
+                } else {
+                    warningFound = true;
+                }
             }
             //throw new Error("missing tool");
         } else {
-            productionLog("All BondMachine tools has been found.", "success");
+            if (enableLog) {
+                productionLog("All BondMachine tools has been found.", "success");
+            }
         }
 
         const missingOptionalTools: string[] = [];
         for (const tool of this.optionalTools) {
             try {
                 execSync("which " + tool, { stdio: 'ignore' })
-                productionLog("Optional tool found: " + tool, "success");
+                if(enableLog) {
+                    productionLog("Optional tool found: " + tool, "success");
+                }
             } catch (err) {
                 missingOptionalTools.push(tool);
             }
@@ -81,11 +100,22 @@ export class DoctorStrategy {
 
         if (missingOptionalTools.length > 0) {
             for (const missingOptTool of missingOptionalTools) {
-                productionLog("Optional tool not found: " + missingOptTool, "warning");
+                if (enableLog) {
+                    productionLog("Optional tool not found: " + missingOptTool, "warning");
+                } else {
+                    warningFound = true;
+                }
             }
         }
 
-
+        if (!enableLog) {
+            if (warningFound) {
+                productionLog("Doctor has detected a warning; Run the command 'bmhelper doctor' to get more details.", "warning");
+            }
+            if(errorFound) {
+                productionLog("Doctor has detected an error; Run the command 'bmhelper doctor' to get more details. ", "error");
+            }
+        }
     }
 
 }

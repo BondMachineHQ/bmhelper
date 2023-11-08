@@ -5,6 +5,7 @@ import { debugLog, productionLog } from "../functions/generics";
 import { ProjectsHandler } from "../projecthandlers/projects";
 import { execSync } from "child_process";
 import { BondGoProjectHandler } from "../projecthandlers/bondgo";
+import { NeuralNetworkProjectHandler } from "../projecthandlers/neuralnetwork";
 
 export interface IVariable {
     name: string;
@@ -50,6 +51,11 @@ export class ValidateApplyStrategy implements IStrategy {
                 name: "bondgo",
                 key: "SOURCE_GO",
                 value: ""
+            },
+            {
+                name: "neuralnetwork",
+                key: "SOURCE_NEURALBOND",
+                value: ""
             }
         ]
         this.workflowsSelected = [];
@@ -87,6 +93,12 @@ export class ValidateApplyStrategy implements IStrategy {
                 await bondgoPrjHandler.execValidation(this.apply);
                 if (this.apply === true) {
                     await bondgoPrjHandler.apply();
+                }
+            } else if (workflow.key == "SOURCE_NEURALBOND") {
+                const nnPrjHandler = new NeuralNetworkProjectHandler(this.variables);
+                await nnPrjHandler.execValidation(this.apply);
+                if (this.apply === true) {
+                    await nnPrjHandler.apply();
                 }
             }
         }

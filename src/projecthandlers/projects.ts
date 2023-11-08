@@ -47,6 +47,7 @@ export class ProjectsHandler extends AbstractHandler {
             value: "working_dir",
             toGenerate: false
         }]
+        this.ignoreDependencies = []
         this.variables = variables;
         this.templatesData = [];
         this.patternsToCheck = ['{{datatype}}', '{{ranges}}', '{{prefix}}', '{{registersize}}', '{{multop}}'];
