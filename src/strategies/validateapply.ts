@@ -6,6 +6,8 @@ import { ProjectsHandler } from "../projecthandlers/projects";
 import { execSync } from "child_process";
 import { BondGoProjectHandler } from "../projecthandlers/bondgo";
 import { NeuralNetworkProjectHandler } from "../projecthandlers/neuralnetwork";
+import { AsmProjectHandler } from "../projecthandlers/asm";
+import { BasmProjectHandler } from "../projecthandlers/basm";
 
 export interface IVariable {
     name: string;
@@ -106,6 +108,18 @@ export class ValidateApplyStrategy implements IStrategy {
                 }
             } else if (workflow.key == "SOURCE_NEURALBOND") {
                 const nnPrjHandler = new NeuralNetworkProjectHandler(this.variables);
+                await nnPrjHandler.execValidation(this.apply);
+                if (this.apply === true) {
+                    await nnPrjHandler.apply();
+                }
+            } else if (workflow.key == "SOURCE_ASM") {
+                const nnPrjHandler = new AsmProjectHandler(this.variables);
+                await nnPrjHandler.execValidation(this.apply);
+                if (this.apply === true) {
+                    await nnPrjHandler.apply();
+                }
+            } else if (workflow.key == "SOURCE_BASM") {
+                const nnPrjHandler = new BasmProjectHandler(this.variables);
                 await nnPrjHandler.execValidation(this.apply);
                 if (this.apply === true) {
                     await nnPrjHandler.apply();
