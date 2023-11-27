@@ -71,6 +71,13 @@ export class AsmProjectHandler extends AbstractHandler {
 
         const variablesName: string[] = this.variables.map(elm => elm.name);
 
+        const oldType = this.variables.find(elm => elm.name == "BOARD");
+        if (oldType != undefined) {
+            this.targetBoard = oldType.value;
+            productionLog("Found target board: " + this.targetBoard, "success");
+            return;
+        }
+        
         const foundType = this.variables.find(elm => elm.name === "GENERAL_TYPE_BOARD" && elm.value === "y");
         if (foundType == undefined) {
             return;
