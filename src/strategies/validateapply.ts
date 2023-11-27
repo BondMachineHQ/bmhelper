@@ -53,6 +53,16 @@ export class ValidateApplyStrategy implements IStrategy {
                 value: ""
             },
             {
+                name: "asm",
+                key: "SOURCE_ASM",
+                value: ""
+            },
+            {
+                name: "basm",
+                key: "SOURCE_BASM",
+                value: ""
+            },
+            {
                 name: "neuralnetwork",
                 key: "SOURCE_NEURALBOND",
                 value: ""
