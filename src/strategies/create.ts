@@ -85,7 +85,6 @@ export class CreateStrategy {
             if (!existsSync(`.bm-resources/${fileToCopy}`)) {
                 throw new Error(`File ${fileToCopy} does not exist in .bmresources directory`)
             }
-            execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
             debugLog(` Copied ${fileToCopy} `, `success`)
         }
 
@@ -101,12 +100,6 @@ export class CreateStrategy {
             debugLog(" Going to create project directory: " + this.projectName, "warning")
             mkdirSync(this.projectName)
             debugLog(" Successfully create project directory: " + this.projectName, "success")
-
-            for (const fileToCopy of this.filesToCopy) {
-                debugLog(` Going to copy ${fileToCopy} `, `warning`)
-                execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
-                debugLog(` Copied ${fileToCopy} `, `success`)
-            }
 
             productionLog(`Project has been successfully created.`, "success");
             
@@ -131,6 +124,12 @@ export class CreateStrategy {
             execSync(`cp -r bmexamples/${this.projectTemplateName} ${this.projectName}`);
             execSync("rm -rf bmexamples");
             productionLog("Project successfully created from template.", "success");
+        }
+
+        for (const fileToCopy of this.filesToCopy) {
+            debugLog(` Going to copy ${fileToCopy} `, `warning`)
+            execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
+            debugLog(` Copied ${fileToCopy} `, `success`)
         }
     }
 
