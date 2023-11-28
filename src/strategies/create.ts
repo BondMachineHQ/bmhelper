@@ -147,8 +147,8 @@ export class CreateStrategy {
 
         for (const fileToCopy of this.filesToCopy) {
             debugLog(` Going to copy ${fileToCopy} `, `warning`)
-            if (this.isSymbolicLink(this.projectName+"/"+fileToCopy)) {
-                this.removeSymbolicLink(this.projectName+"/"+fileToCopy);
+            if (existsSync(this.projectName+"/"+fileToCopy)) {
+                fs.unlinkSync(this.projectName+"/"+fileToCopy);
             }
             execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
             debugLog(` Copied ${fileToCopy} `, `success`)
