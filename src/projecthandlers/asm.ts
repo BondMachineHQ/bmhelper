@@ -36,8 +36,6 @@ export class AsmProjectHandler extends AbstractHandler {
 
     private workingDir: string;
     private globalGeneratedMkFile: string;
-    private targetBoard: string;
-    private filesToCheck: string[];
 
     constructor(protected variables: IVariable[]) {
         super(variables)
@@ -63,8 +61,6 @@ export class AsmProjectHandler extends AbstractHandler {
         }]
         this.workingDir = "";
         this.globalGeneratedMkFile = "generated.mk";
-        this.targetBoard = "";
-        this.filesToCheck = [".xdc"]
     }
 
     public checkInternalDependencies(apply: boolean) {
@@ -112,34 +108,6 @@ export class AsmProjectHandler extends AbstractHandler {
                 this.targetBoard = boardInts[0].replace("XILINX_BOARD_", "").toLowerCase();
                 productionLog("Found target board: " + this.targetBoard, "success");
             }
-        }
-    }
-
-    private copyTclFileAndConstr() {
-
-        const directorySourceName: string = ".bm-resources";
-        if (!existsSync(directorySourceName)) {
-            throw new Error("Bm resources folder not found.");
-        }
-
-        const filesInFolder: string[] = fs.readdirSync(directorySourceName);
-        const targetBoardFiles: string[] = [];
-
-        for (const file of filesInFolder) {
-            if (file.startsWith(this.targetBoard)) {
-                targetBoardFiles.push(file);
-            }
-        }
-
-        for (const targetFile of targetBoardFiles) {
-            const foundfile = this.filesToCheck.find(elm => targetFile.includes(elm));
-            if (foundfile == undefined) {
-                execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
-            } else {
-                if(fs.existsSync(targetFile) == false) {
-                    execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
-                } 
-            }   
         }
     }
 

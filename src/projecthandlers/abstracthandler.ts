@@ -1,3 +1,4 @@
+import { execSync } from "child_process";
 import { productionLog } from "../functions/generics";
 import { IWorkflowHandler } from "../interfaces/IStrategy";
 import { IVariable } from "../strategies/validateapply";
@@ -10,9 +11,13 @@ export class AbstractHandler implements IWorkflowHandler {
     protected mandatoryDependencies: IMandatoryDependencies[];
     protected generateMkVariables: IVariable[];
     protected ignoreDependencies: IVariable[];
+    protected targetBoard: string;
+    private filesToCheck: string[];
 
     constructor(protected variables: IVariable[]) {
         this.generateMkVariables = [];
+        this.filesToCheck = [".xdc"]
+        this.targetBoard = "";
     }
 
     checkInternalDependencies(apply: boolean): void {
@@ -129,6 +134,41 @@ export class AbstractHandler implements IWorkflowHandler {
         generateMkFile.push(`ROOTDIR=.`);
         const generatedMkFileToDump = generateMkFile.join("\n");
         fs.writeFileSync(`generated.mk`, generatedMkFileToDump, 'utf8');
+    }
+
+    public copyTclFileAndConstr() {
+        const directorySourceName: string = ".bm-resources";
+        if (!existsSync(directorySourceName)) {
+            throw new Error("Bm resources folder not found.");
+        }
+
+        const filesInFolder: string[] = fs.readdirSync(directorySourceName);
+        const targetBoardFiles: string[] = [];
+
+        for (const file of filesInFolder) {
+            if (file.startsWith(this.targetBoard)) {
+                targetBoardFiles.push(file);
+            }
+        }
+
+        for (const targetFile of targetBoardFiles) {
+            const foundfile = this.filesToCheck.find(elm => targetFile.includes(elm));
+            if (foundfile == undefined) {
+                if(fs.lstatSync(`${directorySourceName}/${targetFile}`).isDirectory()) {
+                    execSync(`cp -r ${directorySourceName}/${targetFile} ${targetFile}`);
+                } else {
+                    execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
+                }
+            } else {
+                if(fs.existsSync(targetFile) == false) {
+                    if(fs.lstatSync(`${directorySourceName}/${targetFile}`).isDirectory()) {
+                        execSync(`cp -r ${directorySourceName}/${targetFile} ${targetFile}`);
+                    } else {
+                        execSync(`cp ${directorySourceName}/${targetFile} ${targetFile}`);
+                    }
+                } 
+            }   
+        }
     }
 
     apply(): void {
