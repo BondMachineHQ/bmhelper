@@ -92,8 +92,27 @@ export class CreateStrategy {
         debugLog(" Project name is:  " + this.projectName, "success");
     }
 
+    private isSymbolicLink(filePath: string): boolean {
+        try {
+            if (!fs.existsSync(filePath)) {
+                return false;
+            }
+            const stats = fs.lstatSync(filePath);
+            return stats.isSymbolicLink();
+        } catch (error) {
+            return false;
+        }
+    }
+
+    private removeSymbolicLink(filePath: string): void {
+        try {
+            fs.unlinkSync(filePath);
+        } catch (error) {
+        }
+    }
+
     private create(): void {
-        if(fs.existsSync(this.projectName)) {
+        if (fs.existsSync(this.projectName)) {
             throw new Error(`A folder called ${this.projectName} already exists.`)
         }
         if (this.createFromTemplate == false) {
@@ -102,7 +121,7 @@ export class CreateStrategy {
             debugLog(" Successfully create project directory: " + this.projectName, "success")
 
             productionLog(`Project has been successfully created.`, "success");
-            
+
         } else {
             productionLog("Going to check the available template projects to start with.", "success");
             execSync("git clone -q https://github.com/BondMachineHQ/bmexamples.git", { stdio: 'ignore' });
@@ -128,6 +147,9 @@ export class CreateStrategy {
 
         for (const fileToCopy of this.filesToCopy) {
             debugLog(` Going to copy ${fileToCopy} `, `warning`)
+            if (this.isSymbolicLink(this.projectName+"/"+fileToCopy)) {
+                this.removeSymbolicLink(this.projectName+"/"+fileToCopy);
+            }
             execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
             debugLog(` Copied ${fileToCopy} `, `success`)
         }
@@ -135,7 +157,7 @@ export class CreateStrategy {
 
     public execute(): void {
 
-        if (this.listExamples == false) {            
+        if (this.listExamples == false) {
             this.create();
         } else {
             this.list();
