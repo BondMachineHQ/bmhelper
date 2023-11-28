@@ -85,6 +85,7 @@ export class CreateStrategy {
             if (!existsSync(`.bm-resources/${fileToCopy}`)) {
                 throw new Error(`File ${fileToCopy} does not exist in .bmresources directory`)
             }
+            execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
             debugLog(` Copied ${fileToCopy} `, `success`)
         }
 
