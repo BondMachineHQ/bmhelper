@@ -5,9 +5,6 @@ import { ValidateApplyStrategy } from "./strategies/validateapply";
 import { existsSync } from "fs";
 import { DoctorStrategy } from "./strategies/doctor";
 
-// there will be three actions 
-// 1. create -> create the projects with Makefile and kconfig
-
 export type actionT = "help" | "create"  | "validate" | "apply" | "doctor" | "version"
 export let ISDEBUGACTIVE:boolean = false;
 
@@ -70,7 +67,7 @@ async function main() {
             break
         case "doctor":
             try {
-                doctorStrategy.checkDependencies(true);
+                await doctorStrategy.checkDependencies(true);
             } catch (err) {
                 buildErrorAndReturn(err.message);
             }

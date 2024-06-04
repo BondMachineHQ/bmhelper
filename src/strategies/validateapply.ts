@@ -68,6 +68,11 @@ export class ValidateApplyStrategy implements IStrategy {
                 name: "neuralnetwork",
                 key: "SOURCE_NEURALBOND",
                 value: ""
+            },
+            {
+                name: "json",
+                key: "SOURCE_JSON",
+                value: ""
             }
         ]
         this.workflowsSelected = [];
@@ -85,7 +90,7 @@ export class ValidateApplyStrategy implements IStrategy {
         }
 
         if (this.workflowsSelected.length == 0) {
-            throw new Error("No workflows could be identified based on the scanned files.")
+            throw new Error("No workflows could be identified based on the analyzed files")
         }
 
         productionLog("Workflow detected: " + this.workflowsSelected.map(elm => elm.name).join(",")+".", "success");

@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 import fs, { existsSync, mkdirSync } from "fs";
 import { debugLog, productionLog } from "../functions/generics";
 import { IStrategy } from "../interfaces/IStrategy";
+import axios from "axios";
 
 export class DoctorStrategy {
 
@@ -13,24 +14,15 @@ export class DoctorStrategy {
     constructor(protected params: string[]) {
         this.params = params;
         this.executablesNecessaryBefore = ["make", "dot", "curl"];
-        this.bmTools = [
-            "basm",
-            "bmanalysis",
-            "bmnumbers",
-            "bmstack",
-            "bondgo",
-            "bondmachine",
-            "melbond",
-            "neuralbond",
-            "procbuilder",
-            "simbox"
-        ];
-        // icestorm = yosis, icepack
+        this.bmTools = [];
+        // icestorm = iosys, icepack
         this.optionalTools = [
             "vivado",
-            "yosis",
+            "iosys",
             "icepack",
-            "quartus"
+            "quartus",
+            "nextpnr-ice40",
+            "synth_ice40"
         ]
     }
 
@@ -38,7 +30,32 @@ export class DoctorStrategy {
         return this.projectName;
     }
 
-    checkDependencies(enableLog: boolean): void {
+    public async checkDependencies(enableLog: boolean): Promise<void> {
+
+        // use axios to make a get request to this url http://bondmachine.fisica.unipg.it/installer/componentlist which will return this 
+        /**
+         * bmhelper
+            boolbond
+            basm
+            bmanalysis
+            bmbuilder
+            bmnumbers
+            bmqsim
+            bmstack
+            bondgo
+            bondmachine
+            brvgasdl
+            brvgasend
+            melbond
+            neuralbond
+            nnef2bm
+            procbuilder
+            simbox
+         */ 
+        // save them in this.bmTools
+
+        const response = await axios.get("http://bondmachine.fisica.unipg.it/installer/componentlist");
+        this.bmTools = (response.data as string).split("\n").filter(elm => elm != "");
 
         let errorFound: boolean = false;
         let warningFound: boolean = false;
