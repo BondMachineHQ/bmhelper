@@ -54,7 +54,7 @@ export class DoctorStrategy {
          */ 
         // save them in this.bmTools
 
-        const response = await axios.get("http://bondmachine.fisica.unipg.it/installer/componentlist");
+        const response = await axios.get("https://www.bondmachine.it/installer/componentlist");
         this.bmTools = (response.data as string).split("\n").filter(elm => elm != "");
 
         let errorFound: boolean = false;
