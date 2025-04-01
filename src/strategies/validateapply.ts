@@ -8,6 +8,7 @@ import { BondGoProjectHandler } from "../projecthandlers/bondgo";
 import { NeuralNetworkProjectHandler } from "../projecthandlers/neuralnetwork";
 import { AsmProjectHandler } from "../projecthandlers/asm";
 import { BasmProjectHandler } from "../projecthandlers/basm";
+import { QuantumProjectHandler } from "../projecthandlers/quantum";
 
 export interface IVariable {
     name: string;
@@ -73,6 +74,11 @@ export class ValidateApplyStrategy implements IStrategy {
                 name: "json",
                 key: "SOURCE_JSON",
                 value: ""
+            },
+            {
+                name: "quantum",
+                key: "SOURCE_QUANTUM",
+                value: ""
             }
         ]
         this.workflowsSelected = [];
@@ -118,16 +124,22 @@ export class ValidateApplyStrategy implements IStrategy {
                     await nnPrjHandler.apply();
                 }
             } else if (workflow.key == "SOURCE_ASM") {
-                const nnPrjHandler = new AsmProjectHandler(this.variables);
-                await nnPrjHandler.execValidation(this.apply);
+                const asmPrjHandler = new AsmProjectHandler(this.variables);
+                await asmPrjHandler.execValidation(this.apply);
                 if (this.apply === true) {
-                    await nnPrjHandler.apply();
+                    await asmPrjHandler.apply();
                 }
             } else if (workflow.key == "SOURCE_BASM") {
-                const nnPrjHandler = new BasmProjectHandler(this.variables);
-                await nnPrjHandler.execValidation(this.apply);
+                const basmPrjHandler = new BasmProjectHandler(this.variables);
+                await basmPrjHandler.execValidation(this.apply);
                 if (this.apply === true) {
-                    await nnPrjHandler.apply();
+                    await basmPrjHandler.apply();
+                }
+            } else if (workflow.key == "SOURCE_QUANTUM") {
+                const quantumPrjHandler = new QuantumProjectHandler(this.variables);
+                await quantumPrjHandler.execValidation(this.apply);
+                if (this.apply === true) {
+                    await quantumPrjHandler.apply();
                 }
             }
         }

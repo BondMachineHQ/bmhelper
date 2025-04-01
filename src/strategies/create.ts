@@ -35,7 +35,8 @@ export class CreateStrategy {
 
         const projectsTemplate: string[] = [];
         for (const fileName of filesInFolder) {
-            if (fs.lstatSync(fileName).isDirectory()) {
+            const fullPath = `${process.cwd()}/bmexamples/${fileName}`;
+            if (fs.lstatSync(fullPath).isDirectory()) {
                 projectsTemplate.push(fileName);
             }
         }

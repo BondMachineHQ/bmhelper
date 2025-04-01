@@ -32,7 +32,7 @@ export class DoctorStrategy {
 
     public async checkDependencies(enableLog: boolean): Promise<void> {
 
-        // use axios to make a get request to this url http://bondmachine.fisica.unipg.it/installer/componentlist which will return this 
+        // use axios to make a get request to this url https://www.bondmachine.it/installer/componentlist which will return this 
         /**
          * bmhelper
             boolbond

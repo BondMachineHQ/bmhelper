@@ -23,7 +23,7 @@ async function main() {
     debugLog(` Requested ${action} `, "success");
 
     if (action == undefined) {
-        buildErrorAndReturn("Action must be specified");
+        buildErrorAndReturn("Action must be specified, possible actions are: create, validate, apply, doctor, help, version");
     }
 
     if (existsSync(".bm-resources")) {
@@ -93,7 +93,7 @@ async function main() {
             }
             break
         default:
-            buildErrorAndReturn("Action not handled by bondmachine helper");
+            buildErrorAndReturn("Action not handled by bondmachine helper. Possible actions are: create, validate, apply, doctor, help, version");
             break;
     }
 
