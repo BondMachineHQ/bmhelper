@@ -84,8 +84,10 @@ async function main() {
             break
         case "apply":
             const applyStrategy = new ValidateApplyStrategy(true);
+            debugLog("Starting apply strategy", "warning");
             try {
                 doctorStrategy.checkDependencies(false);
+                debugLog("Dependencies checked", "warning");
                 await applyStrategy.check();
                 await applyStrategy.exec();
             } catch (err) {

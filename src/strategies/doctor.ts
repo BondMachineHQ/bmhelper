@@ -18,7 +18,7 @@ export class DoctorStrategy {
         // icestorm = iosys, icepack
         this.optionalTools = [
             "vivado",
-            "iosys",
+            "yosys",
             "icepack",
             "quartus",
             "nextpnr-ice40",

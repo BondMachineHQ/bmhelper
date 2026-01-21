@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { productionLog } from "../functions/generics";
+import { debugLog, productionLog } from "../functions/generics";
 import { IWorkflowHandler } from "../interfaces/IStrategy";
 import { IVariable } from "../strategies/validateapply";
 import { IGenerateVariable, IMandatoryDependencies } from "./bondgo";
@@ -84,6 +84,8 @@ export class AbstractHandler implements IWorkflowHandler {
         for (const dep of this.mandatoryDependencies) {
             if (dep.type === "file" || dep.type === "folder") {
                 const variableName = this.variables.find(elm => elm.name === dep.name);
+                debugLog(`Checking for ${dep.type} ${variableName?.name}`, "warning");
+
                 if (fs.existsSync(variableName.value) === false) {
                     productionLog(`Source ${dep.type} ${variableName.value} not found`, "error");
                 } else {

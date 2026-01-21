@@ -37,6 +37,9 @@ export class CreateStrategy {
         for (const fileName of filesInFolder) {
             const fullPath = `${process.cwd()}/bmexamples/${fileName}`;
             if (fs.lstatSync(fullPath).isDirectory()) {
+                if (fileName.startsWith(".")) {
+                    continue;
+                }
                 projectsTemplate.push(fileName);
             }
         }
@@ -131,9 +134,7 @@ export class CreateStrategy {
 
             const projectsTemplate: string[] = [];
             for (const fileName of filesInFolder) {
-                if (fileName.startsWith("proj_")) {
-                    projectsTemplate.push(fileName);
-                }
+                projectsTemplate.push(fileName);
             }
 
             if (projectsTemplate.includes(this.projectTemplateName) == false) {
@@ -147,13 +148,20 @@ export class CreateStrategy {
         }
 
         for (const fileToCopy of this.filesToCopy) {
-            debugLog(` Going to copy ${fileToCopy} `, `warning`)
-            if (existsSync(this.projectName+"/"+fileToCopy)) {
-                fs.unlinkSync(this.projectName+"/"+fileToCopy);
+            const dest = `${this.projectName}/${fileToCopy}`;
+
+            debugLog(` Going to copy ${fileToCopy} `, `warning`);
+
+            try {
+                fs.lstatSync(dest);                 
+                fs.rmSync(dest, { force: true });  
+            } catch {
             }
-            execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`)
-            debugLog(` Copied ${fileToCopy} `, `success`)
+
+            execSync(`cp .bm-resources/${fileToCopy} ${this.projectName}/`);
+            debugLog(` Copied ${fileToCopy} `, `success`);
         }
+
     }
 
     public execute(): void {

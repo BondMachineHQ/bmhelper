@@ -6,9 +6,11 @@ import { ProjectsHandler } from "../projecthandlers/projects";
 import { execSync } from "child_process";
 import { BondGoProjectHandler } from "../projecthandlers/bondgo";
 import { NeuralNetworkProjectHandler } from "../projecthandlers/neuralnetwork";
+import { FlexpyProjectHandler } from "../projecthandlers/flexpy";
 import { AsmProjectHandler } from "../projecthandlers/asm";
 import { BasmProjectHandler } from "../projecthandlers/basm";
 import { QuantumProjectHandler } from "../projecthandlers/quantum";
+import { JSONProjectHandler } from "../projecthandlers/json";
 
 export interface IVariable {
     name: string;
@@ -79,6 +81,11 @@ export class ValidateApplyStrategy implements IStrategy {
                 name: "quantum",
                 key: "SOURCE_QUANTUM",
                 value: ""
+            },
+            {
+                name: "flexpy",
+                key: "SOURCE_FLEXPY",
+                value: ""
             }
         ]
         this.workflowsSelected = [];
@@ -87,6 +94,8 @@ export class ValidateApplyStrategy implements IStrategy {
     }
 
     getWorkflow() {
+
+        debugLog("Analyzing the project to detect the workflow...", "warning");
 
         const keys = this.workflows.map(elm => elm.key);
         for (const variable of this.variables) {
@@ -141,7 +150,20 @@ export class ValidateApplyStrategy implements IStrategy {
                 if (this.apply === true) {
                     await quantumPrjHandler.apply();
                 }
+            } else if (workflow.key == "SOURCE_FLEXPY") {
+                const flexpyPrjHandler = new FlexpyProjectHandler(this.variables);
+                await flexpyPrjHandler.execValidation(this.apply);
+                if (this.apply === true) {
+                    await flexpyPrjHandler.apply();
+                }
+            } else if (workflow.key == "SOURCE_JSON") {
+                const jsonProjectHandler = new JSONProjectHandler(this.variables);
+                await jsonProjectHandler.execValidation(this.apply);
+                if (this.apply === true) {
+                    await jsonProjectHandler.apply();
+                }
             }
+            
         }
     }
 
@@ -149,6 +171,9 @@ export class ValidateApplyStrategy implements IStrategy {
         const alreadyExists = this.variables.findIndex(elm => elm.name === name);
         if (alreadyExists != -1) {
             this.variables.splice(alreadyExists, 1)
+        }
+        if (value === undefined) {
+            value = "";
         }
         const entry: IVariable = {
             name: name,
@@ -200,18 +225,24 @@ export class ValidateApplyStrategy implements IStrategy {
 
             for await (const line of rl) {
                 const trimmedLine = line.trim();
+                debugLog(` Reading line: ${trimmedLine} from file ${configFileToRead}`, "warning");
                 if (trimmedLine.startsWith('CONFIG_') && configFileToRead == ".config") {
                     const [name, value] = trimmedLine.split('=');
+                    debugLog(` Detected variable ${name} with value ${value}`, "warning");
                     this.insertNewVariable(name.substring('CONFIG_'.length), value)
                 } else if (configFileToRead == "local.mk") {
+                    debugLog(` Processing local.mk line: ${trimmedLine}`, "warning");
                     if (trimmedLine.startsWith('#')) {
                         continue
                     }
                     if (trimmedLine.startsWith('include')) {
+                        debugLog(` Detected include statement`, "warning");
                         const [name, value] = trimmedLine.split(' ');
+                        debugLog(` Including file ${value}`, "warning");
                         await this.readMk(value.trim())
                         continue
                     } else {
+                        debugLog(` Detected variable assignment`, "warning");
                         const [name, value] = trimmedLine.split('=');
                         this.insertNewVariable(name, value);
                     }

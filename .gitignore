@@ -6,3 +6,4 @@ banknote.json
 generic-info.txt
 bmexamples/
 package-lock.json
+pkg_output/
